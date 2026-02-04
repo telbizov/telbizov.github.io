@@ -25,6 +25,8 @@
         .ammo-current { font-family: 'Orbitron', sans-serif; font-size: 48px; font-weight: 900; color: #0ff; text-shadow: 0 0 30px #0ff; }
         .ammo-max { font-size: 20px; color: #666; }
         .weapon-name { font-family: 'Orbitron', sans-serif; font-size: 14px; color: #f0f; margin-top: 5px; text-shadow: 0 0 10px #f0f; }
+        .reloads-display { margin-top: 8px; font-size: 14px; }
+        #reloads-left { font-family: 'Orbitron', sans-serif; font-size: 18px; color: #0ff; text-shadow: 0 0 10px #0ff; }
         .void-bits { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
         .void-bits-icon { width: 20px; height: 20px; background: linear-gradient(135deg, #f0f, #0ff); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
         .void-bits-value { font-family: 'Orbitron', sans-serif; font-size: 24px; color: #f0f; text-shadow: 0 0 15px #f0f; }
@@ -72,6 +74,24 @@
         .item-status { font-size: 12px; color: #0f0; margin-top: 5px; }
         .shop-close { display: block; margin: 30px auto 0; padding: 15px 50px; font-family: 'Orbitron', sans-serif; font-size: 14px; background: transparent; border: 2px solid #0ff; color: #0ff; cursor: pointer; }
         .shop-close:hover { background: rgba(0,255,255,0.2); }
+        .map-selector { display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+        .map-btn { background: transparent; border: 2px solid #333; padding: 10px; cursor: pointer; transition: all 0.3s; width: 120px; }
+        .map-btn:hover { border-color: #888; }
+        .map-btn.active { border-color: #0ff; box-shadow: 0 0 20px rgba(0,255,255,0.3); }
+        .map-preview { width: 100px; height: 60px; margin-bottom: 8px; border-radius: 4px; }
+        .void-preview { background: linear-gradient(135deg, #1a0a2e 0%, #0a0015 50%, #220033 100%); }
+        .cyber-preview { background: linear-gradient(135deg, #001a1a 0%, #003333 50%, #00ffff33 100%); }
+        .hell-preview { background: linear-gradient(135deg, #1a0500 0%, #330a00 50%, #ff440033 100%); }
+        .ice-preview { background: linear-gradient(135deg, #0a1a2e 0%, #1a3355 50%, #aaddff33 100%); }
+        .toxic-preview { background: linear-gradient(135deg, #0a1a00 0%, #1a3300 50%, #88ff0033 100%); }
+        .desert-preview { background: linear-gradient(135deg, #2a1a0a 0%, #443322 50%, #ffaa4433 100%); }
+        .space-preview { background: linear-gradient(135deg, #050510 0%, #110022 50%, #6644ff33 100%); }
+        .matrix-preview { background: linear-gradient(135deg, #000a00 0%, #003300 50%, #00ff0033 100%); }
+        .map-name { font-family: 'Orbitron', sans-serif; font-size: 10px; color: #888; letter-spacing: 1px; }
+        .map-btn.active .map-name { color: #0ff; }
+        #pause-menu { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1500; cursor: default; flex-direction: column; align-items: center; justify-content: center; }
+        .pause-title { font-family: 'Orbitron', sans-serif; font-size: 64px; font-weight: 900; color: #fff; text-shadow: 0 0 50px #0ff; letter-spacing: 15px; margin-bottom: 50px; }
+        .pause-buttons { display: flex; flex-direction: column; gap: 20px; }
     </style>
 </head>
 <body>
@@ -85,11 +105,12 @@
             <div class="health-bar"><div class="health-fill" id="health-fill"></div></div>
             <div class="void-bits"><div class="void-bits-icon"></div><span class="void-bits-value" id="bits-display">0</span></div>
         </div>
-        <div class="hud-corner hud-tr"><div class="stat-label">Score</div><div class="stat-value" id="score">0</div></div>
+        <div class="hud-corner hud-tr"><div class="stat-label">Time</div><div class="stat-value" id="timer">1:00</div><div class="stat-label" style="margin-top:15px;">Score</div><div class="stat-value" id="score">0</div></div>
         <div class="hud-corner hud-bl">
             <div class="stat-label">Ammo</div>
             <div class="ammo-display"><span class="ammo-current" id="ammo">30</span><span class="ammo-max" id="ammo-max">/ 30</span></div>
             <div class="weapon-name" id="weapon-name">PULSE PISTOL</div>
+            <div class="reloads-display"><span class="stat-label">Reloads: </span><span id="reloads-left">4</span></div>
         </div>
         <div class="hud-corner hud-br"><div class="stat-label">Wave</div><div class="stat-value" id="wave">1 / 20</div></div>
     </div>
@@ -102,9 +123,44 @@
             <button class="diff-btn active" data-diff="normal">NORMAL</button>
             <button class="diff-btn hard" data-diff="hard">HARD</button>
         </div>
+        <div class="stat-label" style="margin-top: 25px;">SELECT MAP</div>
+        <div class="map-selector">
+            <button class="map-btn active" data-map="void">
+                <div class="map-preview void-preview"></div>
+                <div class="map-name">VOID ARENA</div>
+            </button>
+            <button class="map-btn" data-map="cyber">
+                <div class="map-preview cyber-preview"></div>
+                <div class="map-name">CYBER CITY</div>
+            </button>
+            <button class="map-btn" data-map="hell">
+                <div class="map-preview hell-preview"></div>
+                <div class="map-name">INFERNO</div>
+            </button>
+            <button class="map-btn" data-map="ice">
+                <div class="map-preview ice-preview"></div>
+                <div class="map-name">FROZEN CORE</div>
+            </button>
+            <button class="map-btn" data-map="toxic">
+                <div class="map-preview toxic-preview"></div>
+                <div class="map-name">TOXIC WASTE</div>
+            </button>
+            <button class="map-btn" data-map="desert">
+                <div class="map-preview desert-preview"></div>
+                <div class="map-name">SCORCHED SANDS</div>
+            </button>
+            <button class="map-btn" data-map="space">
+                <div class="map-preview space-preview"></div>
+                <div class="map-name">DARK NEBULA</div>
+            </button>
+            <button class="map-btn" data-map="matrix">
+                <div class="map-preview matrix-preview"></div>
+                <div class="map-name">THE MATRIX</div>
+            </button>
+        </div>
         <div class="menu-row"><button class="menu-btn secondary" id="shop-btn">VOID SHOP</button></div>
         <button class="start-btn" id="start-btn">ENTER THE VOID</button>
-        <div class="controls"><span>WASD</span> Move | <span>MOUSE</span> Aim | <span>CLICK</span> Shoot | <span>R</span> Reload</div>
+        <div class="controls"><span>WASD</span> Move | <span>SPACE</span> Jump | <span>MOUSE</span> Aim | <span>CLICK</span> Shoot | <span>R</span> Reload</div>
     </div>
     <div id="game-over">
         <div class="title">VOID CLAIMED</div>
@@ -114,6 +170,13 @@
         <div class="menu-row">
             <button class="menu-btn secondary" id="shop-btn-go">VOID SHOP</button>
             <button class="menu-btn" id="restart-btn">TRY AGAIN</button>
+        </div>
+    </div>
+    <div id="pause-menu">
+        <div class="pause-title">PAUSED</div>
+        <div class="pause-buttons">
+            <button class="menu-btn" id="resume-btn">RESUME</button>
+            <button class="menu-btn secondary" id="exit-btn">EXIT TO MENU</button>
         </div>
     </div>
     <div id="shop-modal">
@@ -130,11 +193,11 @@
         let playerData = JSON.parse(localStorage.getItem('neonVoidData')) || { voidBits: 0, ownedWeapons: ['pistol'], equippedWeapon: 'pistol', upgrades: {} };
         const saveData = () => localStorage.setItem('neonVoidData', JSON.stringify(playerData));
         const weapons = {
-            pistol: { name: 'PULSE PISTOL', damage: 25, fireRate: 100, ammo: 30, price: 0, desc: 'Standard void pistol.', color: 0x00ffff },
-            smg: { name: 'NEON SMG', damage: 15, fireRate: 50, ammo: 45, price: 500, desc: 'High fire rate.', color: 0x00ff00 },
-            shotgun: { name: 'VOID SHOTGUN', damage: 60, fireRate: 400, ammo: 8, price: 800, desc: 'Close range devastation.', pellets: 5, spread: 0.15, color: 0xff8800 },
-            rifle: { name: 'PLASMA RIFLE', damage: 40, fireRate: 150, ammo: 25, price: 1200, desc: 'Balanced firepower.', color: 0xff00ff },
-            cannon: { name: 'VOID CANNON', damage: 150, fireRate: 800, ammo: 5, price: 2000, desc: 'Explosive obliteration.', explosive: true, color: 0xff0000 }
+            pistol: { name: 'PULSE PISTOL', damage: 25, fireRate: 100, ammo: 30, reloads: 4, price: 0, desc: 'Standard void pistol.', color: 0x00ffff, skin: { body: 0x1a1a2e, accent: 0x00ffff, emissive: 0x00ffff } },
+            smg: { name: 'NEON SMG', damage: 15, fireRate: 50, ammo: 45, reloads: 4, price: 500, desc: 'High fire rate.', color: 0x00ff00, skin: { body: 0x0a2a0a, accent: 0x00ff00, emissive: 0x00ff00 } },
+            shotgun: { name: 'VOID SHOTGUN', damage: 60, fireRate: 400, ammo: 8, reloads: 5, price: 800, desc: 'Close range devastation.', pellets: 5, spread: 0.15, color: 0xff8800, skin: { body: 0x2a1a0a, accent: 0xff8800, emissive: 0xff4400 } },
+            rifle: { name: 'PLASMA RIFLE', damage: 40, fireRate: 150, ammo: 25, reloads: 4, price: 1200, desc: 'Balanced firepower.', color: 0xff00ff, skin: { body: 0x2a0a2a, accent: 0xff00ff, emissive: 0xff00ff } },
+            cannon: { name: 'VOID CANNON', damage: 150, fireRate: 800, ammo: 5, reloads: 5, price: 2000, desc: 'Explosive obliteration.', explosive: true, color: 0xff0000, skin: { body: 0x2a0a0a, accent: 0xff0000, emissive: 0xff0000 } }
         };
         const upgrades = {
             damage1: { name: 'DAMAGE +20%', price: 300, desc: 'More damage.', stat: 'damage', value: 1.2 },
@@ -146,43 +209,782 @@
         };
         const difficulties = { easy: { enemyHealth: 0.7, enemyDamage: 0.5, enemySpeed: 0.8, bitsMult: 0.5 }, normal: { enemyHealth: 1, enemyDamage: 1, enemySpeed: 1, bitsMult: 1 }, hard: { enemyHealth: 1.5, enemyDamage: 1.5, enemySpeed: 1.3, bitsMult: 2 } };
         let currentDifficulty = 'normal';
+        let currentMap = 'void';
+        
+        const maps = {
+            void: {
+                name: 'VOID ARENA',
+                fogColor: 0x0a0015,
+                fogDensity: 0.015,
+                ambientColor: 0x220033,
+                floorColor: 0x0a0015,
+                gridColor1: 0x00ffff,
+                gridColor2: 0x330066,
+                pillarColor: 0x111122,
+                accentColor: 0x00ffff,
+                light1Color: 0x00ffff,
+                light2Color: 0xff00ff,
+                skyColor: 0x0a0015
+            },
+            cyber: {
+                name: 'CYBER CITY',
+                fogColor: 0x001a1a,
+                fogDensity: 0.012,
+                ambientColor: 0x003333,
+                floorColor: 0x001515,
+                gridColor1: 0x00ffaa,
+                gridColor2: 0x004444,
+                pillarColor: 0x0a2020,
+                accentColor: 0x00ffaa,
+                light1Color: 0x00ffaa,
+                light2Color: 0x00aaff,
+                skyColor: 0x001a1a
+            },
+            hell: {
+                name: 'INFERNO',
+                fogColor: 0x1a0500,
+                fogDensity: 0.018,
+                ambientColor: 0x331100,
+                floorColor: 0x150500,
+                gridColor1: 0xff4400,
+                gridColor2: 0x441100,
+                pillarColor: 0x201005,
+                accentColor: 0xff4400,
+                light1Color: 0xff4400,
+                light2Color: 0xff0000,
+                skyColor: 0x1a0500
+            },
+            ice: {
+                name: 'FROZEN CORE',
+                fogColor: 0x0a1a2e,
+                fogDensity: 0.01,
+                ambientColor: 0x223355,
+                floorColor: 0x0a1520,
+                gridColor1: 0x88ddff,
+                gridColor2: 0x224466,
+                pillarColor: 0x152535,
+                accentColor: 0x88ddff,
+                light1Color: 0x88ddff,
+                light2Color: 0xaaaaff,
+                skyColor: 0x0a1a2e
+            },
+            toxic: {
+                name: 'TOXIC WASTE',
+                fogColor: 0x0a1a00,
+                fogDensity: 0.02,
+                ambientColor: 0x223300,
+                floorColor: 0x0a1500,
+                gridColor1: 0x88ff00,
+                gridColor2: 0x334400,
+                pillarColor: 0x1a2010,
+                accentColor: 0x88ff00,
+                light1Color: 0x88ff00,
+                light2Color: 0xaaff00,
+                skyColor: 0x0a1a00
+            },
+            desert: {
+                name: 'SCORCHED SANDS',
+                fogColor: 0x2a1a0a,
+                fogDensity: 0.008,
+                ambientColor: 0x443322,
+                floorColor: 0x2a1a0a,
+                gridColor1: 0xffaa44,
+                gridColor2: 0x443322,
+                pillarColor: 0x3a2a1a,
+                accentColor: 0xffaa44,
+                light1Color: 0xffcc66,
+                light2Color: 0xff8833,
+                skyColor: 0x2a1a0a
+            },
+            space: {
+                name: 'DARK NEBULA',
+                fogColor: 0x050510,
+                fogDensity: 0.008,
+                ambientColor: 0x110022,
+                floorColor: 0x050508,
+                gridColor1: 0x6644ff,
+                gridColor2: 0x220044,
+                pillarColor: 0x0a0a15,
+                accentColor: 0x8866ff,
+                light1Color: 0x6644ff,
+                light2Color: 0xff44aa,
+                skyColor: 0x050510
+            },
+            matrix: {
+                name: 'THE MATRIX',
+                fogColor: 0x000a00,
+                fogDensity: 0.015,
+                ambientColor: 0x003300,
+                floorColor: 0x000800,
+                gridColor1: 0x00ff00,
+                gridColor2: 0x003300,
+                pillarColor: 0x001a00,
+                accentColor: 0x00ff00,
+                light1Color: 0x00ff00,
+                light2Color: 0x00aa00,
+                skyColor: 0x000a00
+            }
+        };
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const playSound = type => { const osc = audioCtx.createOscillator(), gain = audioCtx.createGain(), now = audioCtx.currentTime; osc.connect(gain); gain.connect(audioCtx.destination); if(type==='shoot'){osc.type='square';osc.frequency.setValueAtTime(880,now);osc.frequency.exponentialRampToValueAtTime(110,now+0.1);gain.gain.setValueAtTime(0.12,now);gain.gain.exponentialRampToValueAtTime(0.01,now+0.1);osc.start();osc.stop(now+0.1);}else if(type==='shotgun'){osc.type='sawtooth';osc.frequency.setValueAtTime(200,now);osc.frequency.exponentialRampToValueAtTime(40,now+0.2);gain.gain.setValueAtTime(0.25,now);gain.gain.exponentialRampToValueAtTime(0.01,now+0.2);osc.start();osc.stop(now+0.2);}else if(type==='cannon'){osc.type='sawtooth';osc.frequency.setValueAtTime(80,now);osc.frequency.exponentialRampToValueAtTime(20,now+0.4);gain.gain.setValueAtTime(0.3,now);gain.gain.exponentialRampToValueAtTime(0.01,now+0.4);osc.start();osc.stop(now+0.4);}else if(type==='hit'){osc.type='sawtooth';osc.frequency.setValueAtTime(200,now);osc.frequency.exponentialRampToValueAtTime(50,now+0.1);gain.gain.setValueAtTime(0.1,now);gain.gain.exponentialRampToValueAtTime(0.01,now+0.1);osc.start();osc.stop(now+0.1);}else if(type==='explosion'){osc.type='sawtooth';osc.frequency.setValueAtTime(100,now);osc.frequency.exponentialRampToValueAtTime(20,now+0.3);gain.gain.setValueAtTime(0.2,now);gain.gain.exponentialRampToValueAtTime(0.01,now+0.3);osc.start();osc.stop(now+0.3);}else if(type==='pickup'){osc.type='sine';osc.frequency.setValueAtTime(440,now);osc.frequency.setValueAtTime(660,now+0.1);osc.frequency.setValueAtTime(880,now+0.2);gain.gain.setValueAtTime(0.15,now);gain.gain.exponentialRampToValueAtTime(0.01,now+0.3);osc.start();osc.stop(now+0.3);}else if(type==='damage'){osc.type='square';osc.frequency.setValueAtTime(150,now);osc.frequency.setValueAtTime(100,now+0.1);gain.gain.setValueAtTime(0.2,now);gain.gain.exponentialRampToValueAtTime(0.01,now+0.2);osc.start();osc.stop(now+0.2);}else if(type==='wave'){osc.type='sine';osc.frequency.setValueAtTime(330,now);osc.frequency.setValueAtTime(660,now+0.45);gain.gain.setValueAtTime(0.15,now);gain.gain.exponentialRampToValueAtTime(0.01,now+0.6);osc.start();osc.stop(now+0.6);}else if(type==='buy'){osc.type='sine';osc.frequency.setValueAtTime(523,now);osc.frequency.setValueAtTime(1047,now+0.3);gain.gain.setValueAtTime(0.15,now);gain.gain.exponentialRampToValueAtTime(0.01,now+0.4);osc.start();osc.stop(now+0.4);}};
         let musicPlaying=false,bgMusic=null;
         const startMusic=()=>{if(musicPlaying)return;musicPlaying=true;if(!bgMusic){bgMusic=new Audio('neonvoid.mp3');bgMusic.loop=true;bgMusic.volume=0.5;}bgMusic.play().catch(()=>{});};
         const stopMusic=()=>{musicPlaying=false;if(bgMusic){bgMusic.pause();bgMusic.currentTime=0;}};
-        const state={playing:false,health:100,maxHealth:100,score:0,ammo:30,maxAmmo:30,wave:1,enemies:[],bullets:[],particles:[],healthOrbs:[],reloading:false,canShoot:true,waveInProgress:false,bitsEarned:0,damageMultiplier:1,speedMultiplier:1,reloadMultiplier:1};
-        const keys={w:false,a:false,s:false,d:false},velocity=new THREE.Vector3(),direction=new THREE.Vector3();
+        const state={playing:false,paused:false,health:100,maxHealth:100,score:0,ammo:30,maxAmmo:30,reloadsLeft:4,wave:1,enemies:[],bullets:[],particles:[],healthOrbs:[],reloading:false,canShoot:true,waveInProgress:false,bitsEarned:0,damageMultiplier:1,speedMultiplier:1,reloadMultiplier:1,timer:60,lastTime:0};
+        const keys={w:false,a:false,s:false,d:false,space:false},velocity=new THREE.Vector3(),direction=new THREE.Vector3();
+        let isGrounded=true,verticalVelocity=0;
+        const gravity=0.015,jumpForce=0.3;
         const scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x0a0015,0.015);
         const camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);camera.position.set(0,2,0);
         const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(window.innerWidth,window.innerHeight);renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setClearColor(0x0a0015);document.getElementById('game-container').appendChild(renderer.domElement);
         scene.add(new THREE.AmbientLight(0x220033,0.5));const pointLight1=new THREE.PointLight(0x00ffff,2,50);pointLight1.position.set(10,10,10);scene.add(pointLight1);const pointLight2=new THREE.PointLight(0xff00ff,2,50);pointLight2.position.set(-10,10,-10);scene.add(pointLight2);
+        
+        // Weapon Model System
+        let weaponModel = null;
+        const weaponContainer = new THREE.Group();
+        camera.add(weaponContainer);
+        scene.add(camera);
+        
+        function createWeaponModel(weaponId) {
+            // Remove old weapon
+            while(weaponContainer.children.length > 0) {
+                const child = weaponContainer.children[0];
+                weaponContainer.remove(child);
+                if(child.geometry) child.geometry.dispose();
+                if(child.material) child.material.dispose();
+            }
+            
+            const w = weapons[weaponId];
+            const skin = w.skin;
+            const group = new THREE.Group();
+            
+            const bodyMat = new THREE.MeshStandardMaterial({ color: skin.body, roughness: 0.3, metalness: 0.8 });
+            const accentMat = new THREE.MeshStandardMaterial({ color: skin.accent, emissive: skin.emissive, emissiveIntensity: 0.5, roughness: 0.2, metalness: 0.9 });
+            const glowMat = new THREE.MeshBasicMaterial({ color: skin.emissive });
+            
+            if (weaponId === 'pistol') {
+                // Compact pistol
+                const handle = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.08), bodyMat);
+                handle.position.set(0, -0.06, 0);
+                handle.rotation.x = -0.2;
+                group.add(handle);
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.2), bodyMat);
+                body.position.set(0, 0.02, -0.05);
+                group.add(body);
+                const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.02, 0.15, 8), accentMat);
+                barrel.rotation.x = Math.PI / 2;
+                barrel.position.set(0, 0.02, -0.2);
+                group.add(barrel);
+                const sight = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.02, 0.03), accentMat);
+                sight.position.set(0, 0.055, -0.05);
+                group.add(sight);
+                const glow = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.01, 0.08), glowMat);
+                glow.position.set(0, 0.0, -0.1);
+                group.add(glow);
+            } else if (weaponId === 'smg') {
+                // Longer SMG with magazine
+                const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, 0.06), bodyMat);
+                handle.position.set(0, -0.05, 0.05);
+                handle.rotation.x = -0.3;
+                group.add(handle);
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.3), bodyMat);
+                body.position.set(0, 0.02, -0.05);
+                group.add(body);
+                const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.015, 0.2, 8), accentMat);
+                barrel.rotation.x = Math.PI / 2;
+                barrel.position.set(0, 0.02, -0.3);
+                group.add(barrel);
+                const mag = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.03), accentMat);
+                mag.position.set(0, -0.08, 0);
+                group.add(mag);
+                const stock = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.1), bodyMat);
+                stock.position.set(0, 0.02, 0.15);
+                group.add(stock);
+                const glow1 = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.005, 0.1), glowMat);
+                glow1.position.set(0, 0.053, -0.1);
+                group.add(glow1);
+                const glow2 = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.005, 0.1), glowMat);
+                glow2.position.set(0, -0.013, -0.1);
+                group.add(glow2);
+            } else if (weaponId === 'shotgun') {
+                // Chunky shotgun with double barrel
+                const handle = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.08), bodyMat);
+                handle.position.set(0, -0.06, 0.05);
+                handle.rotation.x = -0.25;
+                group.add(handle);
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.25), bodyMat);
+                body.position.set(0, 0.02, -0.02);
+                group.add(body);
+                const barrel1 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.25, 8), accentMat);
+                barrel1.rotation.x = Math.PI / 2;
+                barrel1.position.set(-0.025, 0.02, -0.27);
+                group.add(barrel1);
+                const barrel2 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.25, 8), accentMat);
+                barrel2.rotation.x = Math.PI / 2;
+                barrel2.position.set(0.025, 0.02, -0.27);
+                group.add(barrel2);
+                const pump = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.08), accentMat);
+                pump.position.set(0, -0.01, -0.15);
+                group.add(pump);
+                const glow = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.02, 0.02), glowMat);
+                glow.position.set(0, 0.065, -0.02);
+                group.add(glow);
+            } else if (weaponId === 'rifle') {
+                // Sleek plasma rifle
+                const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.1, 0.06), bodyMat);
+                handle.position.set(0, -0.05, 0.08);
+                handle.rotation.x = -0.2;
+                group.add(handle);
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.07, 0.35), bodyMat);
+                body.position.set(0, 0.02, -0.05);
+                group.add(body);
+                const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.25, 8), accentMat);
+                barrel.rotation.x = Math.PI / 2;
+                barrel.position.set(0, 0.02, -0.35);
+                group.add(barrel);
+                const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.1, 8), accentMat);
+                scope.rotation.x = Math.PI / 2;
+                scope.position.set(0, 0.065, -0.05);
+                group.add(scope);
+                const scopeLens = new THREE.Mesh(new THREE.CircleGeometry(0.012, 8), glowMat);
+                scopeLens.position.set(0, 0.065, -0.1);
+                group.add(scopeLens);
+                const stock = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.06, 0.12), bodyMat);
+                stock.position.set(0, 0.02, 0.18);
+                group.add(stock);
+                const glow1 = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.075, 0.2), glowMat);
+                glow1.position.set(0.033, 0.02, -0.1);
+                group.add(glow1);
+                const glow2 = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.075, 0.2), glowMat);
+                glow2.position.set(-0.033, 0.02, -0.1);
+                group.add(glow2);
+            } else if (weaponId === 'cannon') {
+                // Big chunky cannon
+                const handle = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.14, 0.1), bodyMat);
+                handle.position.set(0, -0.07, 0.1);
+                handle.rotation.x = -0.3;
+                group.add(handle);
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.3), bodyMat);
+                body.position.set(0, 0.03, 0);
+                group.add(body);
+                const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.35, 12), accentMat);
+                barrel.rotation.x = Math.PI / 2;
+                barrel.position.set(0, 0.03, -0.32);
+                group.add(barrel);
+                const muzzle = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.015, 8, 16), accentMat);
+                muzzle.rotation.x = Math.PI / 2;
+                muzzle.position.set(0, 0.03, -0.5);
+                group.add(muzzle);
+                const core = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 12), glowMat);
+                core.position.set(0, 0.03, -0.5);
+                group.add(core);
+                const tank1 = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.15, 8), accentMat);
+                tank1.position.set(0.055, 0.03, 0.05);
+                group.add(tank1);
+                const tank2 = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.15, 8), accentMat);
+                tank2.position.set(-0.055, 0.03, 0.05);
+                group.add(tank2);
+                const glow = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.02, 0.15), glowMat);
+                glow.position.set(0, 0.1, 0);
+                group.add(glow);
+            }
+            
+            // Position weapon in view (bottom right)
+            group.position.set(0.25, -0.2, -0.4);
+            group.rotation.y = -0.1;
+            
+            weaponContainer.add(group);
+            weaponModel = group;
+        }
+        
+        // Weapon animation state
+        let weaponBobTime = 0;
+        let weaponRecoil = 0;
+        let weaponReloadAnim = 0;
+        let isReloadAnimating = false;
+        
+        function updateWeaponAnimation() {
+            if (!weaponModel) return;
+            
+            // Walking bob
+            if (state.playing && (keys.w || keys.a || keys.s || keys.d) && !isReloadAnimating) {
+                weaponBobTime += 0.15;
+            }
+            const bobX = Math.sin(weaponBobTime) * 0.005;
+            const bobY = Math.abs(Math.cos(weaponBobTime)) * 0.008;
+            
+            // Recoil recovery
+            weaponRecoil *= 0.85;
+            
+            // Reload animation
+            let reloadOffsetY = 0;
+            let reloadOffsetX = 0;
+            let reloadRotZ = 0;
+            let reloadRotX = 0;
+            
+            if (isReloadAnimating) {
+                weaponReloadAnim += 0.04;
+                
+                if (weaponReloadAnim < 1) {
+                    // Phase 1: Drop weapon down and tilt
+                    reloadOffsetY = -0.15 * Math.sin(weaponReloadAnim * Math.PI);
+                    reloadRotZ = 0.4 * Math.sin(weaponReloadAnim * Math.PI);
+                    reloadOffsetX = -0.1 * Math.sin(weaponReloadAnim * Math.PI);
+                } else if (weaponReloadAnim < 2) {
+                    // Phase 2: Magazine out - jerk motion
+                    const t = weaponReloadAnim - 1;
+                    reloadOffsetY = -0.15;
+                    reloadRotZ = 0.4;
+                    reloadOffsetX = -0.1;
+                    reloadRotX = -0.3 * Math.sin(t * Math.PI);
+                } else if (weaponReloadAnim < 3) {
+                    // Phase 3: Magazine in - tap motion
+                    const t = weaponReloadAnim - 2;
+                    reloadOffsetY = -0.15 + 0.03 * Math.sin(t * Math.PI * 2);
+                    reloadRotZ = 0.4;
+                    reloadOffsetX = -0.1;
+                    reloadRotX = 0.2 * Math.sin(t * Math.PI);
+                } else if (weaponReloadAnim < 4) {
+                    // Phase 4: Bring weapon back up
+                    const t = weaponReloadAnim - 3;
+                    reloadOffsetY = -0.15 * (1 - t);
+                    reloadRotZ = 0.4 * (1 - t);
+                    reloadOffsetX = -0.1 * (1 - t);
+                } else {
+                    // Animation complete
+                    isReloadAnimating = false;
+                    weaponReloadAnim = 0;
+                }
+            }
+            
+            // Apply transforms
+            weaponModel.position.set(
+                0.25 + bobX + reloadOffsetX, 
+                -0.2 + bobY + reloadOffsetY, 
+                -0.4 + weaponRecoil
+            );
+            weaponModel.rotation.x = -weaponRecoil * 2 + reloadRotX;
+            weaponModel.rotation.z = reloadRotZ;
+        }
+        
+        function triggerWeaponRecoil() {
+            weaponRecoil = 0.05;
+        }
+        
+        function triggerReloadAnimation() {
+            if (!isReloadAnimating) {
+                isReloadAnimating = true;
+                weaponReloadAnim = 0;
+            }
+        }
         scene.add(new THREE.GridHelper(200,50,0x00ffff,0x330066));const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x0a0015,roughness:0.8,metalness:0.2}));floor.rotation.x=-Math.PI/2;floor.position.y=-0.1;scene.add(floor);
-        for(let i=0;i<20;i++){const angle=(i/20)*Math.PI*2,r=40+Math.random()*20,g=new THREE.Group(),p=new THREE.Mesh(new THREE.BoxGeometry(2,15,2),new THREE.MeshStandardMaterial({color:0x111122,roughness:0.3,metalness:0.8}));p.position.y=7.5;g.add(p);const sGeo=new THREE.BoxGeometry(0.1,14,0.1),sMat=new THREE.MeshBasicMaterial({color:0x00ffff});[-0.9,0.9].forEach(o=>{const s1=new THREE.Mesh(sGeo,sMat);s1.position.set(o,7.5,1.05);g.add(s1);const s2=new THREE.Mesh(sGeo,sMat);s2.position.set(o,7.5,-1.05);g.add(s2);});g.position.set(Math.cos(angle)*r,0,Math.sin(angle)*r);scene.add(g);}
-        let pitch=0,yaw=0;const euler=new THREE.Euler(0,0,0,'YXZ');const onMouseMove=e=>{if(!state.playing)return;yaw-=(e.movementX||0)*0.002;pitch-=(e.movementY||0)*0.002;pitch=Math.max(-Math.PI/2,Math.min(Math.PI/2,pitch));euler.set(pitch,yaw,0);camera.quaternion.setFromEuler(euler);};
-        const enemyTypes=[{sides:4,health:20,color:0x00ff00,score:50,bits:5},{sides:6,health:40,color:0xffff00,score:100,bits:10},{sides:8,health:60,color:0xff8800,score:150,bits:15},{sides:12,health:80,color:0xff0066,score:200,bits:25},{sides:20,health:100,color:0xff00ff,score:300,bits:40}];
-        class Enemy{constructor(x,z){const diff=difficulties[currentDifficulty],maxType=Math.min(Math.floor(state.wave/4),enemyTypes.length-1);this.type=enemyTypes[Math.floor(Math.random()*(maxType+1))];let geo;switch(this.type.sides){case 4:geo=new THREE.TetrahedronGeometry(1);break;case 6:geo=new THREE.BoxGeometry(1.2,1.2,1.2);break;case 8:geo=new THREE.OctahedronGeometry(1);break;case 12:geo=new THREE.DodecahedronGeometry(1);break;case 20:geo=new THREE.IcosahedronGeometry(1);break;}this.mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:this.type.color,emissive:this.type.color,emissiveIntensity:0.5,roughness:0.3,metalness:0.8}));this.mesh.position.set(x,1.5+Math.random(),z);this.mesh.scale.setScalar(0.8+Math.random()*0.4);this.health=this.type.health*diff.enemyHealth;this.speed=(0.03+Math.random()*0.02+state.wave*0.003)*diff.enemySpeed;this.damage=(10+state.wave*2)*diff.enemyDamage;this.attackCooldown=0;scene.add(this.mesh);}update(){const dir=new THREE.Vector3().subVectors(camera.position,this.mesh.position);dir.y=0;dir.normalize();this.mesh.position.add(dir.multiplyScalar(this.speed));this.mesh.rotation.y+=0.02;this.mesh.rotation.x+=0.01;this.mesh.position.y=1.5+Math.sin(Date.now()*0.003+this.mesh.position.x)*0.3;const dist=this.mesh.position.distanceTo(camera.position);if(dist<3&&this.attackCooldown<=0){takeDamage(this.damage);this.attackCooldown=60;}this.attackCooldown--;return dist>0.5;}takeDamage(amt){this.health-=amt;playSound('hit');this.mesh.material.emissiveIntensity=2;setTimeout(()=>{if(this.mesh.material)this.mesh.material.emissiveIntensity=0.5;},100);return this.health<=0;}destroy(){for(let i=0;i<15;i++)createParticle(this.mesh.position.clone(),new THREE.Vector3((Math.random()-0.5)*0.3,Math.random()*0.2,(Math.random()-0.5)*0.3),this.type.color);if(Math.random()<0.3)spawnHealthOrb(this.mesh.position.clone());playSound('explosion');scene.remove(this.mesh);this.mesh.geometry.dispose();this.mesh.material.dispose();}}
+        
+        let mapObjects = [];
+        let gridHelper = null;
+        let portals = [];
+        let canTeleport = true;
+        
+        function clearMapObjects() {
+            mapObjects.forEach(obj => {
+                scene.remove(obj);
+                if (obj.traverse) {
+                    obj.traverse(child => {
+                        if (child.geometry) child.geometry.dispose();
+                        if (child.material) child.material.dispose();
+                    });
+                }
+            });
+            mapObjects = [];
+            portals = [];
+        }
+        
+        function loadMap(mapId) {
+            const map = maps[mapId];
+            scene.fog = new THREE.FogExp2(map.fogColor, map.fogDensity);
+            renderer.setClearColor(map.skyColor);
+            floor.material.color.setHex(map.floorColor);
+            pointLight1.color.setHex(map.light1Color);
+            pointLight2.color.setHex(map.light2Color);
+            
+            // Remove old grid
+            scene.children.forEach(child => {
+                if (child.type === 'GridHelper') scene.remove(child);
+            });
+            gridHelper = new THREE.GridHelper(200, 50, map.gridColor1, map.gridColor2);
+            scene.add(gridHelper);
+            
+            clearMapObjects();
+            
+            if (mapId === 'void') createVoidMap(map);
+            else if (mapId === 'cyber') createCyberMap(map);
+            else if (mapId === 'hell') createHellMap(map);
+            else if (mapId === 'ice') createIceMap(map);
+            else if (mapId === 'toxic') createToxicMap(map);
+            else if (mapId === 'desert') createDesertMap(map);
+            else if (mapId === 'space') createSpaceMap(map);
+            else if (mapId === 'matrix') createMatrixMap(map);
+        }
+        
+        function createVoidMap(map) {
+            for (let i = 0; i < 20; i++) {
+                const angle = (i / 20) * Math.PI * 2, r = 40 + Math.random() * 20;
+                const g = new THREE.Group();
+                const p = new THREE.Mesh(new THREE.BoxGeometry(2, 15, 2), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.3, metalness: 0.8 }));
+                p.position.y = 7.5; g.add(p);
+                const sGeo = new THREE.BoxGeometry(0.1, 14, 0.1), sMat = new THREE.MeshBasicMaterial({ color: map.accentColor });
+                [-0.9, 0.9].forEach(o => {
+                    const s1 = new THREE.Mesh(sGeo, sMat); s1.position.set(o, 7.5, 1.05); g.add(s1);
+                    const s2 = new THREE.Mesh(sGeo, sMat); s2.position.set(o, 7.5, -1.05); g.add(s2);
+                });
+                g.position.set(Math.cos(angle) * r, 0, Math.sin(angle) * r);
+                scene.add(g); mapObjects.push(g);
+            }
+        }
+        
+        function createCyberMap(map) {
+            for (let i = 0; i < 25; i++) {
+                const angle = (i / 25) * Math.PI * 2, r = 35 + Math.random() * 30;
+                const g = new THREE.Group();
+                const height = 10 + Math.random() * 20, width = 3 + Math.random() * 3;
+                const building = new THREE.Mesh(new THREE.BoxGeometry(width, height, width), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.5, metalness: 0.7 }));
+                building.position.y = height / 2; g.add(building);
+                const windowMat = new THREE.MeshBasicMaterial({ color: map.accentColor });
+                for (let y = 2; y < height - 1; y += 2) {
+                    for (let side = 0; side < 4; side++) {
+                        if (Math.random() > 0.3) {
+                            const win = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 1), windowMat);
+                            win.position.y = y;
+                            if (side === 0) { win.position.z = width / 2 + 0.01; }
+                            else if (side === 1) { win.position.z = -width / 2 - 0.01; win.rotation.y = Math.PI; }
+                            else if (side === 2) { win.position.x = width / 2 + 0.01; win.rotation.y = Math.PI / 2; }
+                            else { win.position.x = -width / 2 - 0.01; win.rotation.y = -Math.PI / 2; }
+                            g.add(win);
+                        }
+                    }
+                }
+                const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3, 8), new THREE.MeshBasicMaterial({ color: map.accentColor }));
+                antenna.position.y = height + 1.5; g.add(antenna);
+                g.position.set(Math.cos(angle) * r, 0, Math.sin(angle) * r);
+                scene.add(g); mapObjects.push(g);
+            }
+            for (let i = 0; i < 8; i++) {
+                const platform = new THREE.Mesh(new THREE.BoxGeometry(6, 0.5, 6), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.3, metalness: 0.8 }));
+                platform.position.set((Math.random() - 0.5) * 60, 0.25, (Math.random() - 0.5) * 60);
+                const edge = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.1, 6.2), new THREE.MeshBasicMaterial({ color: map.accentColor }));
+                edge.position.y = 0.3; platform.add(edge);
+                scene.add(platform); mapObjects.push(platform);
+            }
+        }
+        
+        function createHellMap(map) {
+            for (let i = 0; i < 30; i++) {
+                const angle = (i / 30) * Math.PI * 2, r = 30 + Math.random() * 35;
+                const g = new THREE.Group();
+                const height = 5 + Math.random() * 15;
+                const rock = new THREE.Mesh(new THREE.ConeGeometry(1.5 + Math.random(), height, 5 + Math.floor(Math.random() * 3)), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.9, metalness: 0.1 }));
+                rock.position.y = height / 2; rock.rotation.y = Math.random() * Math.PI; g.add(rock);
+                if (Math.random() > 0.5) {
+                    const fire = new THREE.Mesh(new THREE.SphereGeometry(0.8, 8, 8), new THREE.MeshBasicMaterial({ color: map.accentColor, transparent: true, opacity: 0.6 }));
+                    fire.position.y = 0.5; g.add(fire);
+                }
+                g.position.set(Math.cos(angle) * r, 0, Math.sin(angle) * r);
+                scene.add(g); mapObjects.push(g);
+            }
+            for (let i = 0; i < 10; i++) {
+                const pool = new THREE.Mesh(new THREE.CircleGeometry(2 + Math.random() * 3, 12), new THREE.MeshBasicMaterial({ color: 0xff2200, transparent: true, opacity: 0.8 }));
+                pool.rotation.x = -Math.PI / 2; pool.position.set((Math.random() - 0.5) * 80, 0.05, (Math.random() - 0.5) * 80);
+                scene.add(pool); mapObjects.push(pool);
+            }
+            for (let i = 0; i < 50; i++) {
+                const ember = new THREE.Mesh(new THREE.SphereGeometry(0.1, 4, 4), new THREE.MeshBasicMaterial({ color: 0xff4400 }));
+                ember.position.set((Math.random() - 0.5) * 100, 2 + Math.random() * 10, (Math.random() - 0.5) * 100);
+                scene.add(ember); mapObjects.push(ember);
+            }
+        }
+        
+        function createIceMap(map) {
+            for (let i = 0; i < 25; i++) {
+                const angle = (i / 25) * Math.PI * 2, r = 35 + Math.random() * 25;
+                const g = new THREE.Group();
+                const numCrystals = 2 + Math.floor(Math.random() * 4);
+                for (let c = 0; c < numCrystals; c++) {
+                    const height = 4 + Math.random() * 12;
+                    const crystal = new THREE.Mesh(new THREE.ConeGeometry(0.5 + Math.random() * 0.5, height, 6), new THREE.MeshStandardMaterial({ color: 0x88ccff, roughness: 0.1, metalness: 0.9, transparent: true, opacity: 0.7 }));
+                    crystal.position.set((Math.random() - 0.5) * 2, height / 2, (Math.random() - 0.5) * 2);
+                    crystal.rotation.x = (Math.random() - 0.5) * 0.3; crystal.rotation.z = (Math.random() - 0.5) * 0.3;
+                    g.add(crystal);
+                }
+                const base = new THREE.Mesh(new THREE.CylinderGeometry(2, 2.5, 1, 8), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.2, metalness: 0.8 }));
+                base.position.y = 0.5; g.add(base);
+                g.position.set(Math.cos(angle) * r, 0, Math.sin(angle) * r);
+                scene.add(g); mapObjects.push(g);
+            }
+            for (let i = 0; i < 6; i++) {
+                const arch = new THREE.Group();
+                const pillar1 = new THREE.Mesh(new THREE.BoxGeometry(1, 8, 1), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.2, metalness: 0.8 }));
+                pillar1.position.set(-3, 4, 0); arch.add(pillar1);
+                const pillar2 = new THREE.Mesh(new THREE.BoxGeometry(1, 8, 1), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.2, metalness: 0.8 }));
+                pillar2.position.set(3, 4, 0); arch.add(pillar2);
+                const top = new THREE.Mesh(new THREE.BoxGeometry(7, 1, 1), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.2, metalness: 0.8 }));
+                top.position.y = 8.5; arch.add(top);
+                const glow = new THREE.Mesh(new THREE.BoxGeometry(5, 0.2, 0.2), new THREE.MeshBasicMaterial({ color: map.accentColor }));
+                glow.position.y = 8; arch.add(glow);
+                const angle = (i / 6) * Math.PI * 2;
+                arch.position.set(Math.cos(angle) * 25, 0, Math.sin(angle) * 25);
+                arch.rotation.y = angle + Math.PI / 2;
+                scene.add(arch); mapObjects.push(arch);
+            }
+            for (let i = 0; i < 100; i++) {
+                const snow = new THREE.Mesh(new THREE.SphereGeometry(0.05, 4, 4), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+                snow.position.set((Math.random() - 0.5) * 100, Math.random() * 15, (Math.random() - 0.5) * 100);
+                scene.add(snow); mapObjects.push(snow);
+            }
+        }
+        
+        function createToxicMap(map) {
+            // Toxic barrels and pipes
+            for (let i = 0; i < 25; i++) {
+                const angle = (i / 25) * Math.PI * 2, r = 35 + Math.random() * 25;
+                const g = new THREE.Group();
+                // Toxic barrel stack
+                const numBarrels = 1 + Math.floor(Math.random() * 3);
+                for (let b = 0; b < numBarrels; b++) {
+                    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 2, 12), new THREE.MeshStandardMaterial({ color: 0x2a3a1a, roughness: 0.7, metalness: 0.3 }));
+                    barrel.position.set((Math.random() - 0.5) * 2, 1 + b * 2, (Math.random() - 0.5) * 2);
+                    g.add(barrel);
+                    // Toxic glow on top
+                    const glow = new THREE.Mesh(new THREE.CircleGeometry(0.8, 12), new THREE.MeshBasicMaterial({ color: map.accentColor, transparent: true, opacity: 0.6 }));
+                    glow.rotation.x = -Math.PI / 2;
+                    glow.position.set(barrel.position.x, 2 + b * 2 + 0.01, barrel.position.z);
+                    g.add(glow);
+                }
+                g.position.set(Math.cos(angle) * r, 0, Math.sin(angle) * r);
+                scene.add(g); mapObjects.push(g);
+            }
+            // Toxic pools
+            for (let i = 0; i < 12; i++) {
+                const pool = new THREE.Mesh(new THREE.CircleGeometry(3 + Math.random() * 4, 16), new THREE.MeshBasicMaterial({ color: 0x88ff00, transparent: true, opacity: 0.5 }));
+                pool.rotation.x = -Math.PI / 2;
+                pool.position.set((Math.random() - 0.5) * 80, 0.05, (Math.random() - 0.5) * 80);
+                scene.add(pool); mapObjects.push(pool);
+            }
+            // Pipes
+            for (let i = 0; i < 8; i++) {
+                const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 20, 8), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.5, metalness: 0.6 }));
+                pipe.rotation.z = Math.PI / 2;
+                pipe.position.set((Math.random() - 0.5) * 60, 3 + Math.random() * 5, (Math.random() - 0.5) * 60);
+                scene.add(pipe); mapObjects.push(pipe);
+            }
+            // Bubbles
+            for (let i = 0; i < 40; i++) {
+                const bubble = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), new THREE.MeshBasicMaterial({ color: map.accentColor, transparent: true, opacity: 0.4 }));
+                bubble.position.set((Math.random() - 0.5) * 80, 0.5 + Math.random() * 3, (Math.random() - 0.5) * 80);
+                scene.add(bubble); mapObjects.push(bubble);
+            }
+        }
+        
+        function createDesertMap(map) {
+            // Sand dunes (large low pyramids)
+            for (let i = 0; i < 15; i++) {
+                const angle = (i / 15) * Math.PI * 2, r = 40 + Math.random() * 30;
+                const dune = new THREE.Mesh(new THREE.ConeGeometry(8 + Math.random() * 6, 3 + Math.random() * 2, 4), new THREE.MeshStandardMaterial({ color: 0x3a2a1a, roughness: 0.9, metalness: 0.1 }));
+                dune.position.set(Math.cos(angle) * r, 1.5, Math.sin(angle) * r);
+                dune.rotation.y = Math.random() * Math.PI;
+                scene.add(dune); mapObjects.push(dune);
+            }
+            // Ancient ruins/pillars
+            for (let i = 0; i < 20; i++) {
+                const angle = (i / 20) * Math.PI * 2, r = 30 + Math.random() * 25;
+                const g = new THREE.Group();
+                const height = 5 + Math.random() * 10;
+                const pillar = new THREE.Mesh(new THREE.CylinderGeometry(1, 1.2, height, 8), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.8, metalness: 0.2 }));
+                pillar.position.y = height / 2;
+                // Make some pillars broken
+                if (Math.random() > 0.5) {
+                    pillar.scale.y = 0.3 + Math.random() * 0.5;
+                    pillar.position.y = (height * pillar.scale.y) / 2;
+                }
+                g.add(pillar);
+                g.position.set(Math.cos(angle) * r, 0, Math.sin(angle) * r);
+                scene.add(g); mapObjects.push(g);
+            }
+            // Cacti
+            for (let i = 0; i < 12; i++) {
+                const g = new THREE.Group();
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 4, 8), new THREE.MeshStandardMaterial({ color: 0x2a4a2a, roughness: 0.8 }));
+                trunk.position.y = 2;
+                g.add(trunk);
+                // Arms
+                const arm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 2, 8), new THREE.MeshStandardMaterial({ color: 0x2a4a2a, roughness: 0.8 }));
+                arm1.position.set(0.6, 2.5, 0);
+                arm1.rotation.z = -Math.PI / 4;
+                g.add(arm1);
+                if (Math.random() > 0.5) {
+                    const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 1.5, 8), new THREE.MeshStandardMaterial({ color: 0x2a4a2a, roughness: 0.8 }));
+                    arm2.position.set(-0.5, 2, 0);
+                    arm2.rotation.z = Math.PI / 4;
+                    g.add(arm2);
+                }
+                g.position.set((Math.random() - 0.5) * 80, 0, (Math.random() - 0.5) * 80);
+                scene.add(g); mapObjects.push(g);
+            }
+        }
+        
+        function createSpaceMap(map) {
+            // Floating asteroids
+            for (let i = 0; i < 30; i++) {
+                const size = 1 + Math.random() * 3;
+                const asteroid = new THREE.Mesh(new THREE.DodecahedronGeometry(size, 0), new THREE.MeshStandardMaterial({ color: 0x333344, roughness: 0.9, metalness: 0.3 }));
+                asteroid.position.set((Math.random() - 0.5) * 100, 2 + Math.random() * 15, (Math.random() - 0.5) * 100);
+                asteroid.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                scene.add(asteroid); mapObjects.push(asteroid);
+            }
+            // Glowing portals
+            for (let i = 0; i < 6; i++) {
+                const angle = (i / 6) * Math.PI * 2, r = 35;
+                const portal = new THREE.Mesh(new THREE.TorusGeometry(3, 0.3, 16, 32), new THREE.MeshBasicMaterial({ color: map.accentColor }));
+                portal.position.set(Math.cos(angle) * r, 5, Math.sin(angle) * r);
+                portal.rotation.y = angle;
+                scene.add(portal); mapObjects.push(portal);
+                portals.push(portal.position.clone());
+                // Portal center glow
+                const glow = new THREE.Mesh(new THREE.CircleGeometry(2.5, 32), new THREE.MeshBasicMaterial({ color: map.accentColor, transparent: true, opacity: 0.3, side: THREE.DoubleSide }));
+                glow.position.copy(portal.position);
+                glow.rotation.y = angle;
+                scene.add(glow); mapObjects.push(glow);
+            }
+            // Space station parts
+            for (let i = 0; i < 15; i++) {
+                const g = new THREE.Group();
+                const module = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 6), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.3, metalness: 0.8 }));
+                g.add(module);
+                // Solar panels
+                const panel = new THREE.Mesh(new THREE.BoxGeometry(8, 0.1, 3), new THREE.MeshStandardMaterial({ color: 0x2233aa, roughness: 0.3, metalness: 0.7 }));
+                panel.position.y = 0;
+                g.add(panel);
+                const angle = Math.random() * Math.PI * 2, r = 25 + Math.random() * 35;
+                g.position.set(Math.cos(angle) * r, 3 + Math.random() * 8, Math.sin(angle) * r);
+                g.rotation.set(Math.random() * 0.3, Math.random() * Math.PI, Math.random() * 0.3);
+                scene.add(g); mapObjects.push(g);
+            }
+            // Stars
+            for (let i = 0; i < 200; i++) {
+                const star = new THREE.Mesh(new THREE.SphereGeometry(0.05 + Math.random() * 0.1, 4, 4), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+                star.position.set((Math.random() - 0.5) * 150, 10 + Math.random() * 30, (Math.random() - 0.5) * 150);
+                scene.add(star); mapObjects.push(star);
+            }
+        }
+        
+        function createMatrixMap(map) {
+            // Digital towers with streaming code effect
+            for (let i = 0; i < 30; i++) {
+                const angle = (i / 30) * Math.PI * 2, r = 30 + Math.random() * 35;
+                const g = new THREE.Group();
+                const height = 8 + Math.random() * 15;
+                const tower = new THREE.Mesh(new THREE.BoxGeometry(2, height, 2), new THREE.MeshStandardMaterial({ color: map.pillarColor, roughness: 0.3, metalness: 0.7, transparent: true, opacity: 0.8 }));
+                tower.position.y = height / 2;
+                g.add(tower);
+                // Code lines on tower
+                for (let j = 0; j < height; j += 1.5) {
+                    if (Math.random() > 0.3) {
+                        const line = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.8, 2.1), new THREE.MeshBasicMaterial({ color: map.accentColor, transparent: true, opacity: 0.3 + Math.random() * 0.5 }));
+                        line.position.set(1.01, j, 0);
+                        g.add(line);
+                    }
+                }
+                g.position.set(Math.cos(angle) * r, 0, Math.sin(angle) * r);
+                scene.add(g); mapObjects.push(g);
+            }
+            // Floating data cubes
+            for (let i = 0; i < 20; i++) {
+                const cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: map.accentColor, wireframe: true }));
+                cube.position.set((Math.random() - 0.5) * 80, 2 + Math.random() * 10, (Math.random() - 0.5) * 80);
+                scene.add(cube); mapObjects.push(cube);
+            }
+            // Matrix rain particles
+            for (let i = 0; i < 150; i++) {
+                const drop = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.5 + Math.random() * 1, 0.1), new THREE.MeshBasicMaterial({ color: map.accentColor, transparent: true, opacity: 0.3 + Math.random() * 0.5 }));
+                drop.position.set((Math.random() - 0.5) * 100, Math.random() * 20, (Math.random() - 0.5) * 100);
+                scene.add(drop); mapObjects.push(drop);
+            }
+            // Central core
+            const core = new THREE.Mesh(new THREE.OctahedronGeometry(4, 0), new THREE.MeshBasicMaterial({ color: map.accentColor, wireframe: true }));
+            core.position.set(0, 8, 0);
+            scene.add(core); mapObjects.push(core);
+            const coreInner = new THREE.Mesh(new THREE.OctahedronGeometry(2, 0), new THREE.MeshBasicMaterial({ color: map.accentColor, transparent: true, opacity: 0.5 }));
+            coreInner.position.set(0, 8, 0);
+            scene.add(coreInner); mapObjects.push(coreInner);
+        }
+        
+        loadMap('void');
+        
+        let pitch=0,yaw=0;const euler=new THREE.Euler(0,0,0,'YXZ');const onMouseMove=e=>{if(!state.playing||state.paused)return;yaw-=(e.movementX||0)*0.002;pitch-=(e.movementY||0)*0.002;pitch=Math.max(-Math.PI/2,Math.min(Math.PI/2,pitch));euler.set(pitch,yaw,0);camera.quaternion.setFromEuler(euler);};
+        const enemyTypes=[
+            {sides:4,health:20,color:0x00ff00,score:50,bits:5},
+            {sides:6,health:40,color:0xffff00,score:100,bits:10},
+            {sides:8,health:60,color:0xff8800,score:150,bits:15},
+            {sides:12,health:80,color:0xff0066,score:200,bits:25},
+            {sides:20,health:100,color:0xff00ff,score:300,bits:40},
+            {sides:32,health:120,color:0x00ffaa,score:400,bits:55},
+            {sides:3,health:30,color:0xffaa00,score:75,bits:8},
+            {sides:10,health:70,color:0xaa00ff,score:175,bits:20},
+            {sides:16,health:90,color:0x00aaff,score:250,bits:30},
+            {sides:24,health:110,color:0xff0044,score:350,bits:45}
+        ];
+        class Enemy{constructor(x,z){const diff=difficulties[currentDifficulty],maxType=Math.min(Math.floor(state.wave/2),enemyTypes.length-1);this.type=enemyTypes[Math.floor(Math.random()*(maxType+1))];let geo;switch(this.type.sides){case 3:geo=new THREE.ConeGeometry(1,2,3);break;case 4:geo=new THREE.TetrahedronGeometry(1);break;case 6:geo=new THREE.BoxGeometry(1.2,1.2,1.2);break;case 8:geo=new THREE.OctahedronGeometry(1);break;case 10:geo=new THREE.DodecahedronGeometry(0.9,0);break;case 12:geo=new THREE.DodecahedronGeometry(1);break;case 16:geo=new THREE.SphereGeometry(1,8,6);break;case 20:geo=new THREE.IcosahedronGeometry(1);break;case 24:geo=new THREE.TorusGeometry(0.7,0.3,8,12);break;case 32:geo=new THREE.SphereGeometry(1,16,12);break;default:geo=new THREE.IcosahedronGeometry(1);}this.mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:this.type.color,emissive:this.type.color,emissiveIntensity:0.5,roughness:0.3,metalness:0.8}));this.mesh.position.set(x,1.5+Math.random(),z);this.mesh.scale.setScalar(0.8+Math.random()*0.4);this.health=this.type.health*diff.enemyHealth;this.speed=(0.03+Math.random()*0.02+state.wave*0.003)*diff.enemySpeed;this.damage=(10+state.wave*2)*diff.enemyDamage;this.attackCooldown=0;scene.add(this.mesh);}update(){const dir=new THREE.Vector3().subVectors(camera.position,this.mesh.position);dir.y=0;dir.normalize();this.mesh.position.add(dir.multiplyScalar(this.speed));this.mesh.rotation.y+=0.02;this.mesh.rotation.x+=0.01;this.mesh.position.y=1.5+Math.sin(Date.now()*0.003+this.mesh.position.x)*0.3;const dist=this.mesh.position.distanceTo(camera.position);if(dist<3&&this.attackCooldown<=0){takeDamage(this.damage);this.attackCooldown=60;}this.attackCooldown--;return dist>0.5;}takeDamage(amt){this.health-=amt;playSound('hit');this.mesh.material.emissiveIntensity=2;setTimeout(()=>{if(this.mesh.material)this.mesh.material.emissiveIntensity=0.5;},100);return this.health<=0;}destroy(){for(let i=0;i<15;i++)createParticle(this.mesh.position.clone(),new THREE.Vector3((Math.random()-0.5)*0.3,Math.random()*0.2,(Math.random()-0.5)*0.3),this.type.color);if(Math.random()<0.3)spawnHealthOrb(this.mesh.position.clone());playSound('explosion');scene.remove(this.mesh);this.mesh.geometry.dispose();this.mesh.material.dispose();}}
         class HealthOrb{constructor(pos){this.mesh=new THREE.Mesh(new THREE.SphereGeometry(0.5,16,16),new THREE.MeshStandardMaterial({color:0x00ff88,emissive:0x00ff88,emissiveIntensity:0.8,roughness:0.2,metalness:0.5,transparent:true,opacity:0.8}));this.mesh.position.copy(pos);this.mesh.position.y=1;this.mesh.add(new THREE.Mesh(new THREE.SphereGeometry(0.3,16,16),new THREE.MeshBasicMaterial({color:0xffffff})));this.life=600;this.healAmount=25;scene.add(this.mesh);}update(){this.mesh.rotation.y+=0.03;this.mesh.position.y=1+Math.sin(Date.now()*0.005)*0.2;this.life--;this.mesh.scale.setScalar(1+Math.sin(Date.now()*0.01)*0.1);if(this.life<120)this.mesh.material.opacity=this.life/120*0.8;if(this.mesh.position.distanceTo(camera.position)<2){state.health=Math.min(state.maxHealth,state.health+this.healAmount);playSound('pickup');updateHUD();return false;}return this.life>0;}destroy(){scene.remove(this.mesh);this.mesh.geometry.dispose();this.mesh.material.dispose();}}
         const spawnHealthOrb=pos=>state.healthOrbs.push(new HealthOrb(pos));
         class Bullet{constructor(origin,dir,damage,color){this.mesh=new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),new THREE.MeshBasicMaterial({color:color||0x00ffff}));this.mesh.position.copy(origin);this.direction=dir.clone().normalize();this.speed=2;this.life=100;this.damage=damage;this.explosive=weapons[playerData.equippedWeapon].explosive;scene.add(this.mesh);}update(){this.mesh.position.add(this.direction.clone().multiplyScalar(this.speed));this.life--;for(let i=state.enemies.length-1;i>=0;i--){const enemy=state.enemies[i];if(this.mesh.position.distanceTo(enemy.mesh.position)<1.2){if(this.explosive){for(let j=state.enemies.length-1;j>=0;j--){const e=state.enemies[j],d=this.mesh.position.distanceTo(e.mesh.position);if(d<5&&e.takeDamage(this.damage*(1-d/5))){state.score+=e.type.score;state.bitsEarned+=e.type.bits;e.destroy();state.enemies.splice(j,1);}}for(let k=0;k<30;k++)createParticle(this.mesh.position.clone(),new THREE.Vector3((Math.random()-0.5)*0.5,Math.random()*0.3,(Math.random()-0.5)*0.5),0xff4400);updateHUD();return false;}if(enemy.takeDamage(this.damage)){state.score+=enemy.type.score;state.bitsEarned+=enemy.type.bits;enemy.destroy();state.enemies.splice(i,1);updateHUD();}return false;}}return this.life>0;}destroy(){scene.remove(this.mesh);this.mesh.geometry.dispose();this.mesh.material.dispose();}}
         const createParticle=(pos,vel,color)=>{const mesh=new THREE.Mesh(new THREE.BoxGeometry(0.1,0.1,0.1),new THREE.MeshBasicMaterial({color}));mesh.position.copy(pos);state.particles.push({mesh,velocity:vel,life:30+Math.random()*20});scene.add(mesh);};
         const getWeaponStats=()=>{const w=weapons[playerData.equippedWeapon];return{damage:w.damage*state.damageMultiplier,fireRate:w.fireRate,ammo:w.ammo,pellets:w.pellets||1,spread:w.spread||0,color:w.color,explosive:w.explosive};};
-        const shoot=()=>{if(!state.playing||!state.canShoot||state.ammo<=0||state.reloading)return;const w=getWeaponStats();state.ammo--;state.canShoot=false;const weaponId=playerData.equippedWeapon;if(weaponId==='shotgun')playSound('shotgun');else if(weaponId==='cannon')playSound('cannon');else playSound('shoot');const dir=new THREE.Vector3();camera.getWorldDirection(dir);const origin=camera.position.clone().add(dir.clone().multiplyScalar(1));for(let p=0;p<w.pellets;p++){const spreadDir=dir.clone();if(w.spread>0){spreadDir.x+=(Math.random()-0.5)*w.spread;spreadDir.y+=(Math.random()-0.5)*w.spread;spreadDir.z+=(Math.random()-0.5)*w.spread;spreadDir.normalize();}state.bullets.push(new Bullet(origin.clone(),spreadDir,w.damage,w.color));}for(let i=0;i<5;i++)createParticle(origin.clone(),new THREE.Vector3((Math.random()-0.5)*0.2,(Math.random()-0.5)*0.2,(Math.random()-0.5)*0.2),w.color);updateHUD();setTimeout(()=>{state.canShoot=true;},w.fireRate);};
-        const reload=()=>{if(state.reloading||state.ammo===state.maxAmmo)return;state.reloading=true;document.getElementById('ammo').style.opacity='0.3';setTimeout(()=>{state.ammo=state.maxAmmo;state.reloading=false;document.getElementById('ammo').style.opacity='1';updateHUD();},1500*state.reloadMultiplier);};
+        const shoot=()=>{if(!state.playing||!state.canShoot||state.ammo<=0||state.reloading)return;const w=getWeaponStats();state.ammo--;state.canShoot=false;triggerWeaponRecoil();const weaponId=playerData.equippedWeapon;if(weaponId==='shotgun')playSound('shotgun');else if(weaponId==='cannon')playSound('cannon');else playSound('shoot');const dir=new THREE.Vector3();camera.getWorldDirection(dir);const origin=camera.position.clone().add(dir.clone().multiplyScalar(1));for(let p=0;p<w.pellets;p++){const spreadDir=dir.clone();if(w.spread>0){spreadDir.x+=(Math.random()-0.5)*w.spread;spreadDir.y+=(Math.random()-0.5)*w.spread;spreadDir.z+=(Math.random()-0.5)*w.spread;spreadDir.normalize();}state.bullets.push(new Bullet(origin.clone(),spreadDir,w.damage,w.color));}for(let i=0;i<5;i++)createParticle(origin.clone(),new THREE.Vector3((Math.random()-0.5)*0.2,(Math.random()-0.5)*0.2,(Math.random()-0.5)*0.2),w.color);updateHUD();setTimeout(()=>{state.canShoot=true;},w.fireRate);};
+        const reload=()=>{if(state.reloading||state.ammo===state.maxAmmo||state.reloadsLeft<=0)return;state.reloading=true;state.reloadsLeft--;triggerReloadAnimation();document.getElementById('ammo').style.opacity='0.3';setTimeout(()=>{state.ammo=state.maxAmmo;state.reloading=false;document.getElementById('ammo').style.opacity='1';updateHUD();},1500*state.reloadMultiplier);};
         const takeDamage=amt=>{state.health-=amt;playSound('damage');document.getElementById('damage-overlay').style.opacity='0.5';setTimeout(()=>{document.getElementById('damage-overlay').style.opacity='0';},200);updateHUD();if(state.health<=0)gameOver();};
-        const updateHUD=()=>{document.getElementById('health-fill').style.width=`${(state.health/state.maxHealth)*100}%`;document.getElementById('score').textContent=state.score;document.getElementById('ammo').textContent=state.ammo;document.getElementById('ammo-max').textContent=`/ ${state.maxAmmo}`;document.getElementById('wave').textContent=`${state.wave} / 20`;document.getElementById('bits-display').textContent=playerData.voidBits+state.bitsEarned;document.getElementById('weapon-name').textContent=weapons[playerData.equippedWeapon].name;};
-        const spawnWave=()=>{state.waveInProgress=true;playSound('wave');startMusic();const announcement=document.getElementById('wave-announcement');announcement.textContent=`WAVE ${state.wave} / 20`;announcement.style.opacity='1';setTimeout(()=>{announcement.style.opacity='0';},2000);for(let i=0;i<2+state.wave;i++){setTimeout(()=>{if(!state.playing)return;const angle=Math.random()*Math.PI*2;state.enemies.push(new Enemy(Math.cos(angle)*(30+Math.random()*20),Math.sin(angle)*(30+Math.random()*20)));},i*300);}};
+        const updateHUD=()=>{document.getElementById('health-fill').style.width=`${(state.health/state.maxHealth)*100}%`;document.getElementById('score').textContent=state.score;document.getElementById('ammo').textContent=state.ammo;document.getElementById('ammo-max').textContent=`/ ${state.maxAmmo}`;document.getElementById('wave').textContent=`${state.wave} / 20`;document.getElementById('bits-display').textContent=playerData.voidBits+state.bitsEarned;document.getElementById('weapon-name').textContent=weapons[playerData.equippedWeapon].name;document.getElementById('reloads-left').textContent=state.reloadsLeft;if(state.reloadsLeft<=1)document.getElementById('reloads-left').style.color='#ff0000';else document.getElementById('reloads-left').style.color='#0ff';const mins=Math.floor(state.timer/60);const secs=Math.floor(state.timer%60);document.getElementById('timer').textContent=`${mins}:${secs.toString().padStart(2,'0')}`;if(state.timer<=10)document.getElementById('timer').style.color='#ff0000';else document.getElementById('timer').style.color='#fff';};
+        const spawnWave=()=>{state.waveInProgress=true;state.timer=state.wave>=15?70:60;state.lastTime=Date.now();const w=weapons[playerData.equippedWeapon];state.reloadsLeft=w.reloads;state.ammo=state.maxAmmo;playSound('wave');startMusic();const announcement=document.getElementById('wave-announcement');announcement.textContent=`WAVE ${state.wave} / 20`;announcement.style.opacity='1';setTimeout(()=>{announcement.style.opacity='0';},2000);for(let i=0;i<2+state.wave;i++){setTimeout(()=>{if(!state.playing)return;const angle=Math.random()*Math.PI*2;state.enemies.push(new Enemy(Math.cos(angle)*(30+Math.random()*20),Math.sin(angle)*(30+Math.random()*20)));},i*300);}updateHUD();};
         const endGame=won=>{state.playing=false;stopMusic();document.exitPointerLock();const diff=difficulties[currentDifficulty],earnedBits=Math.floor(state.bitsEarned*diff.bitsMult);playerData.voidBits+=earnedBits;saveData();document.getElementById('game-over').querySelector('.title').textContent=won?'VOID CONQUERED':'VOID CLAIMED';document.getElementById('game-over').querySelector('.subtitle').textContent=won?'FINAL SCORE':'YOUR SCORE';document.getElementById('final-score').textContent=state.score;document.getElementById('final-bits').textContent=`+${earnedBits} VOID BITS`;document.getElementById('game-over').style.display='flex';};
         const victory=()=>endGame(true);const gameOver=()=>endGame(false);
+        const pauseGame=()=>{if(!state.playing||state.paused)return;state.paused=true;document.exitPointerLock();document.getElementById('pause-menu').style.display='flex';if(bgMusic)bgMusic.pause();};
+        const resumeGame=()=>{if(!state.paused)return;state.paused=false;state.lastTime=Date.now();document.getElementById('pause-menu').style.display='none';document.body.requestPointerLock();if(bgMusic&&musicPlaying)bgMusic.play();};
+        const exitToMenu=()=>{state.playing=false;state.paused=false;stopMusic();document.getElementById('pause-menu').style.display='none';document.getElementById('start-screen').style.display='flex';};
         const applyUpgrades=()=>{state.damageMultiplier=1;state.maxHealth=100;state.speedMultiplier=1;state.reloadMultiplier=1;Object.keys(playerData.upgrades).forEach(id=>{if(playerData.upgrades[id]){const up=upgrades[id];if(up.stat==='damage')state.damageMultiplier*=up.value;else if(up.stat==='maxHealth')state.maxHealth+=up.value;else if(up.stat==='speed')state.speedMultiplier*=up.value;else if(up.stat==='reload')state.reloadMultiplier*=up.value;}});};
-        const startGame=()=>{document.getElementById('start-screen').style.display='none';document.getElementById('game-over').style.display='none';audioCtx.resume();applyUpgrades();const w=weapons[playerData.equippedWeapon];state.playing=true;state.health=state.maxHealth;state.score=0;state.maxAmmo=w.ammo;state.ammo=state.maxAmmo;state.wave=1;state.bitsEarned=0;state.enemies.forEach(e=>e.destroy());state.enemies=[];state.bullets.forEach(b=>b.destroy());state.bullets=[];state.healthOrbs.forEach(o=>o.destroy());state.healthOrbs=[];camera.position.set(0,2,0);pitch=0;yaw=0;updateHUD();document.body.requestPointerLock();setTimeout(spawnWave,1000);};
+        const startGame=()=>{document.getElementById('start-screen').style.display='none';document.getElementById('game-over').style.display='none';audioCtx.resume();applyUpgrades();loadMap(currentMap);const w=weapons[playerData.equippedWeapon];state.playing=true;state.health=state.maxHealth;state.score=0;state.maxAmmo=w.ammo;state.ammo=state.maxAmmo;state.reloadsLeft=w.reloads;state.wave=1;state.bitsEarned=0;state.timer=60;state.lastTime=Date.now();isGrounded=true;verticalVelocity=0;state.enemies.forEach(e=>e.destroy());state.enemies=[];state.bullets.forEach(b=>b.destroy());state.bullets=[];state.healthOrbs.forEach(o=>o.destroy());state.healthOrbs=[];camera.position.set(0,2,0);pitch=0;yaw=0;createWeaponModel(playerData.equippedWeapon);updateHUD();document.body.requestPointerLock();setTimeout(spawnWave,1000);};
         const renderShop=()=>{document.getElementById('shop-bits').textContent=playerData.voidBits;const wc=document.getElementById('weapon-items');wc.innerHTML='';Object.keys(weapons).forEach(id=>{const w=weapons[id],owned=playerData.ownedWeapons.includes(id),equipped=playerData.equippedWeapon===id;const div=document.createElement('div');div.className=`shop-item ${owned?'owned':''} ${equipped?'equipped':''} ${!owned&&playerData.voidBits<w.price?'locked':''}`;div.innerHTML=`<div class="item-name">${w.name}</div><div class="item-desc">${w.desc}</div><div class="item-stats">DMG: ${w.damage} | RATE: ${Math.round(1000/w.fireRate)}/s | AMMO: ${w.ammo}</div>${owned?`<div class="item-status">${equipped?'✓ EQUIPPED':'OWNED'}</div>`:`<div class="item-price">${w.price} BITS</div>`}`;div.onclick=()=>{if(owned){playerData.equippedWeapon=id;playSound('buy');saveData();renderShop();}else if(playerData.voidBits>=w.price){playerData.voidBits-=w.price;playerData.ownedWeapons.push(id);playerData.equippedWeapon=id;playSound('buy');saveData();renderShop();}};wc.appendChild(div);});const uc=document.getElementById('upgrade-items');uc.innerHTML='';Object.keys(upgrades).forEach(id=>{const up=upgrades[id],owned=playerData.upgrades[id],reqMet=!up.requires||playerData.upgrades[up.requires],canBuy=!owned&&reqMet&&playerData.voidBits>=up.price;const div=document.createElement('div');div.className=`shop-item ${owned?'owned':''} ${!canBuy&&!owned?'locked':''}`;div.innerHTML=`<div class="item-name">${up.name}</div><div class="item-desc">${up.desc}${up.requires&&!reqMet?' (Requires '+upgrades[up.requires].name+')':''}</div>${owned?'<div class="item-status">✓ PURCHASED</div>':`<div class="item-price">${up.price} BITS</div>`}`;div.onclick=()=>{if(canBuy){playerData.voidBits-=up.price;playerData.upgrades[id]=true;playSound('buy');saveData();renderShop();}};uc.appendChild(div);});};
         const openShop=()=>{renderShop();document.getElementById('shop-modal').style.display='block';};const closeShop=()=>{document.getElementById('shop-modal').style.display='none';};
-        document.addEventListener('keydown',e=>{if(e.key.toLowerCase()in keys)keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='r')reload();});document.addEventListener('keyup',e=>{if(e.key.toLowerCase()in keys)keys[e.key.toLowerCase()]=false;});document.addEventListener('mousemove',onMouseMove);document.addEventListener('mousedown',shoot);
+        document.addEventListener('keydown',e=>{if(e.key.toLowerCase()in keys)keys[e.key.toLowerCase()]=true;if(e.code==='Space'){keys.space=true;e.preventDefault();}if(e.key.toLowerCase()==='r'&&!state.paused)reload();if(e.key==='Escape'){if(state.paused)resumeGame();else if(state.playing)pauseGame();}});document.addEventListener('keyup',e=>{if(e.key.toLowerCase()in keys)keys[e.key.toLowerCase()]=false;if(e.code==='Space')keys.space=false;});document.addEventListener('mousemove',onMouseMove);document.addEventListener('mousedown',()=>{if(!state.paused)shoot();});
         document.getElementById('start-btn').addEventListener('click',startGame);document.getElementById('restart-btn').addEventListener('click',()=>{document.getElementById('game-over').style.display='none';document.getElementById('start-screen').style.display='flex';});document.getElementById('shop-btn').addEventListener('click',openShop);document.getElementById('shop-btn-go').addEventListener('click',openShop);document.getElementById('shop-close').addEventListener('click',closeShop);
+        document.getElementById('resume-btn').addEventListener('click',resumeGame);document.getElementById('exit-btn').addEventListener('click',exitToMenu);
         document.querySelectorAll('.diff-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');currentDifficulty=btn.dataset.diff;});});
+        document.querySelectorAll('.map-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.map-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');currentMap=btn.dataset.map;loadMap(currentMap);});});
         window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
-        const animate=()=>{requestAnimationFrame(animate);if(state.playing){direction.set(0,0,0);if(keys.w)direction.z-=1;if(keys.s)direction.z+=1;if(keys.a)direction.x-=1;if(keys.d)direction.x+=1;direction.normalize();direction.applyQuaternion(camera.quaternion);direction.y=0;direction.normalize();velocity.add(direction.multiplyScalar(0.02*state.speedMultiplier));velocity.multiplyScalar(0.9);camera.position.add(velocity);camera.position.y=2;camera.position.x=Math.max(-90,Math.min(90,camera.position.x));camera.position.z=Math.max(-90,Math.min(90,camera.position.z));for(let i=state.enemies.length-1;i>=0;i--){if(!state.enemies[i].update()){state.enemies[i].destroy();state.enemies.splice(i,1);}}for(let i=state.bullets.length-1;i>=0;i--){if(!state.bullets[i].update()){state.bullets[i].destroy();state.bullets.splice(i,1);}}for(let i=state.particles.length-1;i>=0;i--){const p=state.particles[i];p.mesh.position.add(p.velocity);p.velocity.y-=0.01;p.life--;p.mesh.scale.multiplyScalar(0.95);if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose();state.particles.splice(i,1);}}for(let i=state.healthOrbs.length-1;i>=0;i--){if(!state.healthOrbs[i].update()){state.healthOrbs[i].destroy();state.healthOrbs.splice(i,1);}}if(state.enemies.length===0&&state.waveInProgress){state.waveInProgress=false;if(state.wave>=20)victory();else{state.wave++;updateHUD();setTimeout(spawnWave,2000);}}}const t=Date.now()*0.001;pointLight1.position.x=Math.sin(t)*30;pointLight1.position.z=Math.cos(t)*30;pointLight2.position.x=Math.cos(t*0.7)*30;pointLight2.position.z=Math.sin(t*0.7)*30;renderer.render(scene,camera);};updateHUD();animate();
+        const animate=()=>{requestAnimationFrame(animate);if(state.playing&&!state.paused){const now=Date.now();const delta=(now-state.lastTime)/1000;state.lastTime=now;if(state.waveInProgress){state.timer-=delta;if(state.timer<=0){state.timer=0;updateHUD();gameOver();return;}}direction.set(0,0,0);if(keys.w)direction.z-=1;if(keys.s)direction.z+=1;if(keys.a)direction.x-=1;if(keys.d)direction.x+=1;direction.normalize();direction.applyQuaternion(camera.quaternion);direction.y=0;direction.normalize();velocity.add(direction.multiplyScalar(0.02*state.speedMultiplier));velocity.multiplyScalar(0.9);camera.position.add(velocity);
+            // Jumping
+            if(keys.space&&isGrounded){verticalVelocity=jumpForce;isGrounded=false;}
+            verticalVelocity-=gravity;
+            camera.position.y+=verticalVelocity;
+            if(camera.position.y<=2){camera.position.y=2;verticalVelocity=0;isGrounded=true;}
+            // Portal teleportation in space map
+            if(currentMap==='space'&&portals.length>0){
+                let nearPortal = false;
+                for(let i=0;i<portals.length;i++){
+                    const dist=camera.position.distanceTo(portals[i]);
+                    if(dist<3){
+                        nearPortal = true;
+                        if(canTeleport){
+                            let newIdx;
+                            do{newIdx=Math.floor(Math.random()*portals.length);}while(newIdx===i);
+                            camera.position.x=portals[newIdx].x;
+                            camera.position.z=portals[newIdx].z;
+                            camera.position.y=portals[newIdx].y;
+                            playSound('pickup');
+                            canTeleport = false;
+                        }
+                        break;
+                    }
+                }
+                if(!nearPortal) canTeleport = true;
+            }
+            camera.position.x=Math.max(-90,Math.min(90,camera.position.x));camera.position.z=Math.max(-90,Math.min(90,camera.position.z));updateWeaponAnimation();for(let i=state.enemies.length-1;i>=0;i--){if(!state.enemies[i].update()){state.enemies[i].destroy();state.enemies.splice(i,1);}}for(let i=state.bullets.length-1;i>=0;i--){if(!state.bullets[i].update()){state.bullets[i].destroy();state.bullets.splice(i,1);}}for(let i=state.particles.length-1;i>=0;i--){const p=state.particles[i];p.mesh.position.add(p.velocity);p.velocity.y-=0.01;p.life--;p.mesh.scale.multiplyScalar(0.95);if(p.life<=0){scene.remove(p.mesh);p.mesh.geometry.dispose();p.mesh.material.dispose();state.particles.splice(i,1);}}for(let i=state.healthOrbs.length-1;i>=0;i--){if(!state.healthOrbs[i].update()){state.healthOrbs[i].destroy();state.healthOrbs.splice(i,1);}}if(state.enemies.length===0&&state.waveInProgress){state.waveInProgress=false;if(state.wave>=20)victory();else{state.wave++;updateHUD();setTimeout(spawnWave,2000);}}updateHUD();}const t=Date.now()*0.001;pointLight1.position.x=Math.sin(t)*30;pointLight1.position.z=Math.cos(t)*30;pointLight2.position.x=Math.cos(t*0.7)*30;pointLight2.position.z=Math.sin(t*0.7)*30;renderer.render(scene,camera);};updateHUD();animate();
     </script>
 </body>
 </html>

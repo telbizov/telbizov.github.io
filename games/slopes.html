@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLOPE MASTER | Interactive Geometry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --accent-cyan: #00f5d4;
+            --accent-magenta: #f15bb5;
+            --accent-yellow: #fee440;
+            --accent-purple: #9b5de5;
+            --text-primary: #ffffff;
+            --text-muted: #6b7280;
+            --grid-color: rgba(0, 245, 212, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; font-weight: 300; }
+
+        .progress-bar {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .progress-dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.completed {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        .progress-dot.current {
+            border-color: var(--accent-yellow);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(254, 228, 64, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(254, 228, 64, 0); }
+        }
+
+        .hud {
+            position: fixed;
+            top: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+        }
+
+        .hud-item {
+            background: var(--bg-card);
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-family: 'Space Mono', monospace;
+            border: 1px solid var(--accent-purple);
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .hud-label { color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase; }
+        .hud-value { font-size: 1.3rem; color: var(--accent-yellow); }
+
+        .hud-item.timer { border-color: var(--accent-cyan); }
+        .hud-item.timer .hud-value { color: var(--accent-cyan); }
+        .hud-item.timer .hud-value.warning { color: var(--accent-yellow); }
+        .hud-item.timer .hud-value.danger { color: var(--accent-magenta); animation: timerPulse 0.5s infinite; }
+
+        @keyframes timerPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 900px) {
+            .main-content { grid-template-columns: 1fr; }
+            .hud { flex-wrap: wrap; width: 90%; }
+        }
+
+        .lesson-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .lesson-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.3rem;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .lesson-title::before { content: '//'; color: var(--accent-magenta); }
+
+        .lesson-content { line-height: 1.8; color: #d1d5db; }
+
+        .formula-box {
+            background: rgba(0, 245, 212, 0.1);
+            border-left: 3px solid var(--accent-cyan);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            font-family: 'Space Mono', monospace;
+            font-size: 1.2rem;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .highlight { color: var(--accent-yellow); font-weight: 600; }
+
+        .graph-container {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        canvas {
+            width: 100%;
+            border-radius: 12px;
+            cursor: crosshair;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: 'Space Mono', monospace;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: var(--bg-dark);
+            font-weight: 700;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 245, 212, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--accent-magenta);
+            color: var(--accent-magenta);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent-magenta);
+            color: var(--bg-dark);
+        }
+
+        .quiz-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .quiz-question { font-size: 1.1rem; margin-bottom: 1rem; }
+
+        .answer-input {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input[type="number"], input[type="text"] {
+            font-family: 'Space Mono', monospace;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid var(--text-muted);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+            width: 120px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus { outline: none; border-color: var(--accent-cyan); }
+
+        .feedback {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-weight: 600;
+            display: none;
+        }
+
+        .feedback.correct {
+            background: rgba(0, 245, 212, 0.2);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            display: block;
+        }
+
+        .feedback.incorrect {
+            background: rgba(241, 91, 181, 0.2);
+            border: 1px solid var(--accent-magenta);
+            color: var(--accent-magenta);
+            display: block;
+        }
+
+        .instructions {
+            background: rgba(155, 93, 229, 0.1);
+            border: 1px solid var(--accent-purple);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .level-badge {
+            display: inline-block;
+            background: var(--accent-purple);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        /* Difficulty Selection Screen */
+        .difficulty-screen {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .difficulty-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--accent-cyan);
+        }
+
+        .difficulty-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .diff-btn {
+            font-family: 'Space Mono', monospace;
+            padding: 2rem 2.5rem;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .diff-btn.easy {
+            background: linear-gradient(135deg, #00f5d4, #00c9a7);
+            color: var(--bg-dark);
+        }
+
+        .diff-btn.medium {
+            background: linear-gradient(135deg, #fee440, #f9a825);
+            color: var(--bg-dark);
+        }
+
+        .diff-btn.hard {
+            background: linear-gradient(135deg, #f15bb5, #d63384);
+            color: white;
+        }
+
+        .diff-btn:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .diff-time {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        /* Completion Screen */
+        .completion-screen {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .completion-screen.active { display: block; }
+
+        .completion-title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-yellow), var(--accent-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .final-score {
+            font-size: 4rem;
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-cyan);
+            margin: 2rem 0;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .stat { text-align: center; }
+        .stat-value {
+            font-size: 2rem;
+            font-family: 'Space Mono', monospace;
+            color: var(--accent-yellow);
+        }
+        .stat-label { color: var(--text-muted); font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <div class="hud" id="hud" style="display: none;">
+        <div class="hud-item">
+            <div class="hud-label">Question</div>
+            <div class="hud-value" id="questionNum">1/10</div>
+        </div>
+        <div class="hud-item timer">
+            <div class="hud-label">Time</div>
+            <div class="hud-value" id="timerDisplay">1:30</div>
+        </div>
+        <div class="hud-item">
+            <div class="hud-label">Score</div>
+            <div class="hud-value" id="score">0</div>
+        </div>
+        <div class="hud-item">
+            <div class="hud-label">Difficulty</div>
+            <div class="hud-value" id="diffDisplay">EASY</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>SLOPE MASTER</h1>
+            <p class="subtitle">Master the fundamentals of lines and slopes</p>
+            <div class="progress-bar" id="progressBar"></div>
+        </header>
+
+        <div id="gameContent">
+            <!-- Difficulty selection / Levels will be injected here -->
+        </div>
+
+        <div class="completion-screen" id="completionScreen">
+            <h2 class="completion-title">🎉 Course Complete!</h2>
+            <p>You've mastered the basics of slopes and linear equations!</p>
+            <div class="final-score" id="finalScore">0</div>
+            <p>Total Points</p>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="correctCount">0</div>
+                    <div class="stat-label">Correct Answers</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="timeoutCount">0</div>
+                    <div class="stat-label">Timeouts</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="difficultyBonus">0</div>
+                    <div class="stat-label">Difficulty Bonus</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const allQuestions = [
+            {
+                id: 1,
+                title: "What is Slope?",
+                badge: "BASICS",
+                content: `
+                    <p>The <span class="highlight">slope</span> measures how steep a line is.</p>
+                    <div class="formula-box">slope = rise / run = Δy / Δx</div>
+                    <p><span class="highlight">Rise</span> = vertical change, <span class="highlight">Run</span> = horizontal change.</p>
+                `,
+                interactive: "slope_explorer",
+                question: "Click two points on the graph. What is the slope?",
+                type: "calculated"
+            },
+            {
+                id: 2,
+                title: "Identify the Slope Direction",
+                badge: "DIRECTION",
+                content: `
+                    <p><span class="highlight">Positive</span>: Line goes UP to the right ↗</p>
+                    <p><span class="highlight">Negative</span>: Line goes DOWN to the right ↘</p>
+                    <p><span class="highlight">Zero</span>: Horizontal line →</p>
+                    <p><span class="highlight">Undefined</span>: Vertical line ↑</p>
+                `,
+                interactive: "direction_quiz",
+                question: "What type of slope does this line have?",
+                type: "multiple_choice",
+                options: ["Positive", "Negative", "Zero", "Undefined"]
+            },
+            {
+                id: 3,
+                title: "Calculate Slope from Points",
+                badge: "FORMULA",
+                content: `
+                    <p>Given points (x₁, y₁) and (x₂, y₂):</p>
+                    <div class="formula-box">m = (y₂ - y₁) / (x₂ - x₁)</div>
+                `,
+                interactive: "calculate_slope",
+                question: "Calculate the slope between the marked points:",
+                type: "number_input"
+            },
+            {
+                id: 4,
+                title: "Slope-Intercept Form",
+                badge: "EQUATIONS",
+                content: `
+                    <div class="formula-box">y = mx + b</div>
+                    <p><span class="highlight">m</span> = slope, <span class="highlight">b</span> = y-intercept</p>
+                `,
+                interactive: "equation_builder",
+                question: "Adjust sliders to match the target line!",
+                type: "slider_match"
+            },
+            {
+                id: 5,
+                title: "Perpendicular Lines",
+                badge: "RELATIONSHIPS",
+                content: `
+                    <p><span class="highlight">Perpendicular</span> slopes are negative reciprocals:</p>
+                    <div class="formula-box">m₁ × m₂ = -1</div>
+                    <p>If m₁ = 2, then m₂ = -1/2</p>
+                `,
+                interactive: "parallel_perp",
+                question: "What slope is perpendicular to the red line?",
+                type: "fraction_input"
+            },
+            {
+                id: 6,
+                title: "Rise Over Run",
+                badge: "BASICS",
+                content: `
+                    <p>Remember: slope is always <span class="highlight">rise over run</span>.</p>
+                    <p>Count vertical units (rise), then horizontal units (run).</p>
+                    <div class="formula-box">m = rise / run</div>
+                `,
+                interactive: "slope_explorer",
+                question: "Find the slope by counting rise and run:",
+                type: "calculated"
+            },
+            {
+                id: 7,
+                title: "Horizontal & Vertical Lines",
+                badge: "SPECIAL CASES",
+                content: `
+                    <p><span class="highlight">Horizontal lines</span> (y = c): slope = 0</p>
+                    <p><span class="highlight">Vertical lines</span> (x = c): slope is undefined</p>
+                    <p>Why? Vertical lines have run = 0, causing division by zero!</p>
+                `,
+                interactive: "direction_quiz",
+                question: "Identify this line's slope type:",
+                type: "multiple_choice",
+                options: ["Positive", "Negative", "Zero", "Undefined"]
+            },
+            {
+                id: 8,
+                title: "Slope Between Two Points",
+                badge: "FORMULA",
+                content: `
+                    <p>Use the slope formula carefully:</p>
+                    <div class="formula-box">m = (y₂ - y₁) / (x₂ - x₁)</div>
+                    <p>Subtract in the <span class="highlight">same order</span> for both!</p>
+                `,
+                interactive: "calculate_slope",
+                question: "What is the slope between points A and B?",
+                type: "number_input"
+            },
+            {
+                id: 9,
+                title: "Building Linear Equations",
+                badge: "EQUATIONS",
+                content: `
+                    <p>Every line can be written as <span class="highlight">y = mx + b</span></p>
+                    <p>Change m to rotate the line. Change b to shift it up/down.</p>
+                `,
+                interactive: "equation_builder",
+                question: "Match the dashed line by adjusting m and b:",
+                type: "slider_match"
+            },
+            {
+                id: 10,
+                title: "Finding Perpendicular Slopes",
+                badge: "RELATIONSHIPS",
+                content: `
+                    <p>To find a perpendicular slope:</p>
+                    <p>1. Flip the fraction (reciprocal)</p>
+                    <p>2. Change the sign</p>
+                    <div class="formula-box">m⊥ = -1/m</div>
+                `,
+                interactive: "parallel_perp",
+                question: "Calculate the perpendicular slope:",
+                type: "fraction_input"
+            },
+            {
+                id: 11,
+                title: "Steep vs Gentle Slopes",
+                badge: "BASICS",
+                content: `
+                    <p><span class="highlight">Larger absolute value</span> = steeper line</p>
+                    <p>|m| = 3 is steeper than |m| = 0.5</p>
+                    <p>The sign only tells direction, not steepness!</p>
+                `,
+                interactive: "slope_explorer",
+                question: "Create a line and calculate its slope:",
+                type: "calculated"
+            },
+            {
+                id: 12,
+                title: "Recognizing Slope Signs",
+                badge: "DIRECTION",
+                content: `
+                    <p>Quick tip: Trace the line from <span class="highlight">left to right</span>.</p>
+                    <p>Going up? Positive. Going down? Negative.</p>
+                    <p>Flat? Zero. Straight up/down? Undefined.</p>
+                `,
+                interactive: "direction_quiz",
+                question: "What's the slope type of this line?",
+                type: "multiple_choice",
+                options: ["Positive", "Negative", "Zero", "Undefined"]
+            },
+            {
+                id: 13,
+                title: "Negative Coordinates",
+                badge: "FORMULA",
+                content: `
+                    <p>Watch your signs with negative coordinates!</p>
+                    <div class="formula-box">m = (y₂ - y₁) / (x₂ - x₁)</div>
+                    <p>Example: (−2) − (3) = −5, not −1</p>
+                `,
+                interactive: "calculate_slope",
+                question: "Carefully calculate the slope:",
+                type: "number_input"
+            },
+            {
+                id: 14,
+                title: "Y-Intercept Discovery",
+                badge: "EQUATIONS",
+                content: `
+                    <p>The <span class="highlight">y-intercept (b)</span> is where the line crosses the y-axis.</p>
+                    <p>At this point, x = 0 always!</p>
+                    <div class="formula-box">y = mx + b → when x=0, y=b</div>
+                `,
+                interactive: "equation_builder",
+                question: "Find the right m and b values:",
+                type: "slider_match"
+            },
+            {
+                id: 15,
+                title: "Perpendicular Patterns",
+                badge: "RELATIONSHIPS",
+                content: `
+                    <p>Common perpendicular pairs:</p>
+                    <p>• 1 and −1</p>
+                    <p>• 2 and −1/2</p>
+                    <p>• 3 and −1/3</p>
+                    <div class="formula-box">Product always = −1</div>
+                `,
+                interactive: "parallel_perp",
+                question: "Find the perpendicular slope:",
+                type: "fraction_input"
+            },
+            {
+                id: 16,
+                title: "Unit Rate as Slope",
+                badge: "REAL WORLD",
+                content: `
+                    <p>Slope represents <span class="highlight">rate of change</span>!</p>
+                    <p>Speed: distance/time. Price: cost/item.</p>
+                    <p>The graph shows this relationship visually.</p>
+                `,
+                interactive: "slope_explorer",
+                question: "What is the rate of change (slope)?",
+                type: "calculated"
+            },
+            {
+                id: 17,
+                title: "Quick Direction Check",
+                badge: "DIRECTION",
+                content: `
+                    <p>Speed round! Identify slopes quickly.</p>
+                    <p>Trust your instincts — look at the direction!</p>
+                `,
+                interactive: "direction_quiz",
+                question: "Positive, negative, zero, or undefined?",
+                type: "multiple_choice",
+                options: ["Positive", "Negative", "Zero", "Undefined"]
+            },
+            {
+                id: 18,
+                title: "Slope Calculation Challenge",
+                badge: "FORMULA",
+                content: `
+                    <p>Apply the formula one more time:</p>
+                    <div class="formula-box">m = Δy / Δx = (y₂ - y₁) / (x₂ - x₁)</div>
+                `,
+                interactive: "calculate_slope",
+                question: "Calculate the slope:",
+                type: "number_input"
+            },
+            {
+                id: 19,
+                title: "Equation Matching Mastery",
+                badge: "EQUATIONS",
+                content: `
+                    <p>Final equation challenge!</p>
+                    <p>Use both sliders to perfectly match the target.</p>
+                `,
+                interactive: "equation_builder",
+                question: "Create the matching equation:",
+                type: "slider_match"
+            },
+            {
+                id: 20,
+                title: "Perpendicular Mastery",
+                badge: "RELATIONSHIPS",
+                content: `
+                    <p>Remember the rule:</p>
+                    <div class="formula-box">m₁ × m₂ = −1</div>
+                    <p>Flip and negate to find perpendicular slopes!</p>
+                `,
+                interactive: "parallel_perp",
+                question: "What's the perpendicular slope?",
+                type: "fraction_input"
+            }
+        ];
+
+        // Game state
+        let questions = [];
+        let currentLevel = 0;
+        let score = 0;
+        let correctAnswers = 0;
+        let timeouts = 0;
+        let difficulty = 'easy';
+        let timerSeconds = 90;
+        let timerInterval = null;
+        let point1 = null;
+        let point2 = null;
+        let currentAnswer = null;
+        let targetSlope = 0;
+        let targetIntercept = 0;
+        let currentSlope = 1;
+        let currentIntercept = 0;
+        let questionAnswered = false;
+        let answerSubmitted = false;
+
+        const difficultySettings = {
+            easy: { time: 90, multiplier: 1, label: 'EASY' },
+            medium: { time: 75, multiplier: 1.5, label: 'MEDIUM' },
+            hard: { time: 50, multiplier: 2, label: 'HARD' }
+        };
+
+        function init() {
+            showDifficultyScreen();
+        }
+
+        function showDifficultyScreen() {
+            document.getElementById('hud').style.display = 'none';
+            document.getElementById('progressBar').innerHTML = '';
+            document.getElementById('gameContent').innerHTML = `
+                <div class="difficulty-screen">
+                    <h2 class="difficulty-title">SELECT DIFFICULTY</h2>
+                    <p class="difficulty-subtitle">Choose your challenge level</p>
+                    <div class="difficulty-buttons">
+                        <button class="diff-btn easy" onclick="startGame('easy')">
+                            EASY
+                            <span class="diff-time">1:30 per question</span>
+                        </button>
+                        <button class="diff-btn medium" onclick="startGame('medium')">
+                            MEDIUM
+                            <span class="diff-time">1:15 per question</span>
+                        </button>
+                        <button class="diff-btn hard" onclick="startGame('hard')">
+                            HARD
+                            <span class="diff-time">0:50 per question</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startGame(diff) {
+            difficulty = diff;
+            timerSeconds = difficultySettings[diff].time;
+            score = 0;
+            correctAnswers = 0;
+            timeouts = 0;
+            currentLevel = 0;
+
+            // Shuffle all questions and pick 10 unique ones
+            const shuffled = shuffleArray([...allQuestions]);
+            questions = shuffled.slice(0, 10);
+
+            document.getElementById('hud').style.display = 'flex';
+            document.getElementById('diffDisplay').textContent = difficultySettings[diff].label;
+            document.getElementById('score').textContent = '0';
+            
+            renderProgressBar();
+            renderLevel(currentLevel);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function renderProgressBar() {
+            const bar = document.getElementById('progressBar');
+            bar.innerHTML = questions.map((_, i) => 
+                `<div class="progress-dot ${i < currentLevel ? 'completed' : ''} ${i === currentLevel ? 'current' : ''}"></div>`
+            ).join('');
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            let timeLeft = difficultySettings[difficulty].time;
+            questionAnswered = false;
+            updateTimerDisplay(timeLeft);
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay(timeLeft);
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    if (!questionAnswered) {
+                        timeouts++;
+                        showFeedback(false, "⏰ Time's up! Moving to next question...");
+                        setTimeout(() => nextLevel(), 2000);
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay(seconds) {
+            const display = document.getElementById('timerDisplay');
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            display.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+            display.classList.remove('warning', 'danger');
+            if (seconds <= 10) {
+                display.classList.add('danger');
+            } else if (seconds <= 20) {
+                display.classList.add('warning');
+            }
+        }
+
+        function renderLevel(index) {
+            const level = questions[index];
+            document.getElementById('questionNum').textContent = `${index + 1}/10`;
+            
+            const content = document.getElementById('gameContent');
+            content.innerHTML = `
+                <div class="main-content">
+                    <div class="lesson-card">
+                        <span class="level-badge">${level.badge}</span>
+                        <h2 class="lesson-title">${level.title}</h2>
+                        <div class="lesson-content">${level.content}</div>
+                        <div class="quiz-section">
+                            <div class="instructions" id="instructions"></div>
+                            <p class="quiz-question">${level.question}</p>
+                            <div class="answer-input" id="answerArea"></div>
+                            <div class="feedback" id="feedback"></div>
+                        </div>
+                    </div>
+                    <div class="graph-container">
+                        <canvas id="graphCanvas" width="500" height="500"></canvas>
+                        <div class="controls" id="graphControls"></div>
+                    </div>
+                </div>
+            `;
+
+            setupInteractive(level);
+            startTimer();
+        }
+
+        function setupInteractive(level) {
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+            const answerArea = document.getElementById('answerArea');
+            const instructions = document.getElementById('instructions');
+            const controls = document.getElementById('graphControls');
+            
+            point1 = null;
+            point2 = null;
+            answerSubmitted = false;
+
+            switch(level.interactive) {
+                case 'slope_explorer':
+                    instructions.textContent = '👆 Click two points on the graph to create a line.';
+                    answerArea.innerHTML = `
+                        <span>Slope (m) = </span>
+                        <input type="text" id="slopeAnswer" placeholder="e.g. 2 or 1/2">
+                        <button class="btn btn-primary" onclick="checkSlopeAnswer()">CHECK</button>
+                    `;
+                    canvas.onclick = (e) => handleCanvasClick(e, ctx);
+                    drawGrid(ctx);
+                    break;
+
+                case 'direction_quiz':
+                    instructions.textContent = '🔍 Identify the slope type from the line direction.';
+                    generateDirectionQuiz(ctx);
+                    answerArea.innerHTML = level.options.map(opt => 
+                        `<button class="btn btn-secondary" onclick="checkDirection('${opt}')">${opt}</button>`
+                    ).join('');
+                    break;
+
+                case 'calculate_slope':
+                    instructions.textContent = '📐 Use: m = (y₂ - y₁) / (x₂ - x₁)';
+                    const points = generateCalculateQuiz(ctx);
+                    currentAnswer = points.slope;
+                    answerArea.innerHTML = `
+                        <span>m = </span>
+                        <input type="number" step="0.5" id="calcAnswer">
+                        <button class="btn btn-primary" onclick="checkCalculation()">CHECK</button>
+                    `;
+                    break;
+
+                case 'equation_builder':
+                    instructions.textContent = '🎚️ Match the dashed target line with your solid line.';
+                    generateEquationQuiz(ctx);
+                    controls.innerHTML = `
+                        <div style="width:100%">
+                            <label>Slope (m): <span id="slopeVal">${currentSlope}</span></label>
+                            <input type="range" id="slopeSlider" min="-3" max="3" step="0.5" value="${currentSlope}" style="width:100%">
+                        </div>
+                        <div style="width:100%">
+                            <label>Y-intercept (b): <span id="intVal">${currentIntercept}</span></label>
+                            <input type="range" id="intSlider" min="-5" max="5" step="1" value="${currentIntercept}" style="width:100%">
+                        </div>
+                    `;
+                    document.getElementById('slopeSlider').oninput = updateEquation;
+                    document.getElementById('intSlider').oninput = updateEquation;
+                    answerArea.innerHTML = `
+                        <span style="font-family:'Space Mono',monospace;font-size:1.1rem">y = <span id="eqDisplay">${currentSlope}x + ${currentIntercept}</span></span>
+                        <button class="btn btn-primary" onclick="checkEquation()">CHECK</button>
+                    `;
+                    break;
+
+                case 'parallel_perp':
+                    instructions.textContent = '🔄 Perpendicular slope = -1/m';
+                    const baseSlope = generatePerpQuiz(ctx);
+                    currentAnswer = -1 / baseSlope;
+                    answerArea.innerHTML = `
+                        <span>Original: <strong style="color:var(--accent-magenta)">${baseSlope}</strong></span>
+                        <span>Perpendicular = </span>
+                        <input type="text" id="perpAnswer" placeholder="-1/2 or -0.5">
+                        <button class="btn btn-primary" onclick="checkPerp()">CHECK</button>
+                    `;
+                    break;
+            }
+        }
+
+        function drawGrid(ctx) {
+            const w = ctx.canvas.width;
+            const h = ctx.canvas.height;
+            const unit = w / 20;
+            const centerX = w / 2;
+            const centerY = h / 2;
+
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.strokeStyle = 'rgba(0, 245, 212, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 20; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * unit, 0);
+                ctx.lineTo(i * unit, h);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * unit);
+                ctx.lineTo(w, i * unit);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(w, centerY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, h);
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.font = '12px Space Mono';
+            for (let i = -10; i <= 10; i++) {
+                if (i !== 0) {
+                    ctx.fillText(i, centerX + i * unit - 4, centerY + 15);
+                    ctx.fillText(i, centerX + 5, centerY - i * unit + 4);
+                }
+            }
+        }
+
+        function toCanvasCoords(x, y, ctx) {
+            const w = ctx.canvas.width;
+            const unit = w / 20;
+            return { cx: w/2 + x * unit, cy: w/2 - y * unit };
+        }
+
+        function toGraphCoords(cx, cy, ctx) {
+            const w = ctx.canvas.width;
+            const unit = w / 20;
+            return { x: Math.round((cx - w/2) / unit), y: Math.round((w/2 - cy) / unit) };
+        }
+
+        function handleCanvasClick(e, ctx) {
+            const rect = e.target.getBoundingClientRect();
+            const scaleX = ctx.canvas.width / rect.width;
+            const scaleY = ctx.canvas.height / rect.height;
+            const cx = (e.clientX - rect.left) * scaleX;
+            const cy = (e.clientY - rect.top) * scaleY;
+            const coords = toGraphCoords(cx, cy, ctx);
+
+            if (!point1) {
+                point1 = coords;
+                drawPoint(ctx, coords.x, coords.y, '#00f5d4', 'P₁');
+            } else if (!point2) {
+                point2 = coords;
+                drawPoint(ctx, coords.x, coords.y, '#f15bb5', 'P₂');
+                drawLineBetweenPoints(ctx, point1, point2);
+                drawSlopeTriangle(ctx, point1, point2);
+            }
+        }
+
+        function drawPoint(ctx, x, y, color, label) {
+            const {cx, cy} = toCanvasCoords(x, y, ctx);
+            ctx.beginPath();
+            ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 14px Space Mono';
+            ctx.fillText(`${label}(${x},${y})`, cx + 12, cy - 12);
+        }
+
+        function drawLineBetweenPoints(ctx, p1, p2) {
+            const {cx: x1, cy: y1} = toCanvasCoords(p1.x, p1.y, ctx);
+            const {cx: x2, cy: y2} = toCanvasCoords(p2.x, p2.y, ctx);
+            const dx = x2 - x1, dy = y2 - y1;
+            ctx.beginPath();
+            ctx.moveTo(x1 - dx * 100, y1 - dy * 100);
+            ctx.lineTo(x1 + dx * 100, y1 + dy * 100);
+            ctx.strokeStyle = '#fee440';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        function drawSlopeTriangle(ctx, p1, p2) {
+            const {cx: x1, cy: y1} = toCanvasCoords(p1.x, p1.y, ctx);
+            const {cx: x2, cy: y2} = toCanvasCoords(p2.x, p2.y, ctx);
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = '#9b5de5';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#9b5de5';
+            ctx.font = 'bold 14px Space Mono';
+            ctx.fillText(`run=${p2.x - p1.x}`, (x1 + x2)/2, y1 + 20);
+            ctx.fillText(`rise=${p2.y - p1.y}`, x2 + 10, (y1 + y2)/2);
+        }
+
+        function checkSlopeAnswer() {
+            if (answerSubmitted) return;
+            if (!point1 || !point2) {
+                // Don't set answerSubmitted here - let them click points first
+                const feedback = document.getElementById('feedback');
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = 'Click two points first!';
+                return;
+            }
+            answerSubmitted = true;
+            const rise = point2.y - point1.y;
+            const run = point2.x - point1.x;
+            const correctSlope = run === 0 ? 'undefined' : rise / run;
+            const answer = document.getElementById('slopeAnswer').value.trim().toLowerCase();
+            let isCorrect = false;
+
+            if (run === 0 && (answer === 'undefined' || answer === 'undef')) isCorrect = true;
+            else if (run !== 0) {
+                if (answer.includes('/')) {
+                    const [num, den] = answer.split('/').map(Number);
+                    if (den !== 0 && Math.abs(num/den - correctSlope) < 0.01) isCorrect = true;
+                } else if (Math.abs(parseFloat(answer) - correctSlope) < 0.01) isCorrect = true;
+            }
+
+            if (isCorrect) {
+                awardPoints(100);
+                showFeedback(true, `Correct! Slope = ${run === 0 ? 'undefined' : correctSlope}`);
+            } else {
+                showFeedback(false, `Slope = ${run === 0 ? 'undefined' : rise + '/' + run + ' = ' + correctSlope}`);
+            }
+        }
+
+        function generateDirectionQuiz(ctx) {
+            drawGrid(ctx);
+            const types = [
+                { slope: 1.5, answer: 'Positive' },
+                { slope: -1, answer: 'Negative' },
+                { slope: 0, answer: 'Zero' },
+                { slope: Infinity, answer: 'Undefined' }
+            ];
+            const choice = types[Math.floor(Math.random() * types.length)];
+            currentAnswer = choice.answer;
+
+            ctx.strokeStyle = '#fee440';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            if (choice.slope === Infinity) {
+                const {cx} = toCanvasCoords(2, 0, ctx);
+                ctx.moveTo(cx, 0);
+                ctx.lineTo(cx, ctx.canvas.height);
+            } else {
+                const {cx: x1, cy: y1} = toCanvasCoords(-8, -8 * choice.slope, ctx);
+                const {cx: x2, cy: y2} = toCanvasCoords(8, 8 * choice.slope, ctx);
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+            }
+            ctx.stroke();
+        }
+
+        function checkDirection(answer) {
+            if (answerSubmitted) return;
+            answerSubmitted = true;
+            if (answer === currentAnswer) {
+                awardPoints(75);
+                showFeedback(true, `Correct! ${currentAnswer} slope.`);
+            } else {
+                showFeedback(false, `It's a ${currentAnswer.toLowerCase()} slope.`);
+            }
+        }
+
+        function generateCalculateQuiz(ctx) {
+            drawGrid(ctx);
+            const x1 = Math.floor(Math.random() * 6) - 3;
+            const y1 = Math.floor(Math.random() * 6) - 3;
+            const x2 = x1 + Math.floor(Math.random() * 4) + 1;
+            const y2 = y1 + Math.floor(Math.random() * 8) - 4;
+            const slope = (y2 - y1) / (x2 - x1);
+            drawPoint(ctx, x1, y1, '#00f5d4', 'A');
+            drawPoint(ctx, x2, y2, '#f15bb5', 'B');
+            drawLineBetweenPoints(ctx, {x: x1, y: y1}, {x: x2, y: y2});
+            return { slope: Math.round(slope * 100) / 100 };
+        }
+
+        function checkCalculation() {
+            if (answerSubmitted) return;
+            answerSubmitted = true;
+            const answer = parseFloat(document.getElementById('calcAnswer').value);
+            if (Math.abs(answer - currentAnswer) < 0.1) {
+                awardPoints(100);
+                showFeedback(true, `Correct! m = ${currentAnswer}`);
+            } else {
+                showFeedback(false, `Correct answer: ${currentAnswer}`);
+            }
+        }
+
+        function generateEquationQuiz(ctx) {
+            drawGrid(ctx);
+            targetSlope = (Math.floor(Math.random() * 5) - 2) + 0.5 * Math.round(Math.random());
+            targetIntercept = Math.floor(Math.random() * 7) - 3;
+            currentSlope = 1;
+            currentIntercept = 0;
+            drawEquationLine(ctx, targetSlope, targetIntercept, '#f15bb5', true);
+            drawEquationLine(ctx, currentSlope, currentIntercept, '#00f5d4', false);
+        }
+
+        function drawEquationLine(ctx, m, b, color, dashed) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.setLineDash(dashed ? [10, 5] : []);
+            ctx.beginPath();
+            const {cx: x1, cy: y1} = toCanvasCoords(-10, -10 * m + b, ctx);
+            const {cx: x2, cy: y2} = toCanvasCoords(10, 10 * m + b, ctx);
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function updateEquation() {
+            currentSlope = parseFloat(document.getElementById('slopeSlider').value);
+            currentIntercept = parseFloat(document.getElementById('intSlider').value);
+            document.getElementById('slopeVal').textContent = currentSlope;
+            document.getElementById('intVal').textContent = currentIntercept;
+            const sign = currentIntercept >= 0 ? '+' : '';
+            document.getElementById('eqDisplay').textContent = `${currentSlope}x ${sign} ${currentIntercept}`;
+            const ctx = document.getElementById('graphCanvas').getContext('2d');
+            drawGrid(ctx);
+            drawEquationLine(ctx, targetSlope, targetIntercept, '#f15bb5', true);
+            drawEquationLine(ctx, currentSlope, currentIntercept, '#00f5d4', false);
+        }
+
+        function checkEquation() {
+            if (answerSubmitted) return;
+            answerSubmitted = true;
+            if (currentSlope === targetSlope && currentIntercept === targetIntercept) {
+                awardPoints(150);
+                showFeedback(true, `Perfect! y = ${targetSlope}x + ${targetIntercept}`);
+            } else {
+                showFeedback(false, `Target: y = ${targetSlope}x + ${targetIntercept}`);
+            }
+        }
+
+        function generatePerpQuiz(ctx) {
+            drawGrid(ctx);
+            const slopes = [2, -2, 0.5, -0.5, 1, -1, 3, -3];
+            const baseSlope = slopes[Math.floor(Math.random() * slopes.length)];
+            ctx.strokeStyle = '#f15bb5';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            const {cx: x1, cy: y1} = toCanvasCoords(-8, -8 * baseSlope, ctx);
+            const {cx: x2, cy: y2} = toCanvasCoords(8, 8 * baseSlope, ctx);
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            return baseSlope;
+        }
+
+        function checkPerp() {
+            if (answerSubmitted) return;
+            answerSubmitted = true;
+            const answer = document.getElementById('perpAnswer').value.trim();
+            let answerNum;
+            if (answer.includes('/')) {
+                const [num, den] = answer.split('/').map(Number);
+                answerNum = num / den;
+            } else {
+                answerNum = parseFloat(answer);
+            }
+
+            if (Math.abs(answerNum - currentAnswer) < 0.01) {
+                awardPoints(125);
+                showFeedback(true, `Correct! Perpendicular slope = ${currentAnswer}`);
+                const ctx = document.getElementById('graphCanvas').getContext('2d');
+                ctx.strokeStyle = '#00f5d4';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                const {cx: x1, cy: y1} = toCanvasCoords(-8, -8 * currentAnswer, ctx);
+                const {cx: x2, cy: y2} = toCanvasCoords(8, 8 * currentAnswer, ctx);
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            } else {
+                showFeedback(false, `Perpendicular = -1/m = ${currentAnswer}`);
+            }
+        }
+
+        function showFeedback(correct, message) {
+            questionAnswered = true;
+            clearInterval(timerInterval);
+            const feedback = document.getElementById('feedback');
+            feedback.className = `feedback ${correct ? 'correct' : 'incorrect'}`;
+            feedback.textContent = message;
+            if (correct) correctAnswers++;
+            setTimeout(() => nextLevel(), 2000);
+        }
+
+        function awardPoints(basePoints) {
+            const multiplier = difficultySettings[difficulty].multiplier;
+            const points = Math.round(basePoints * multiplier);
+            score += points;
+            document.getElementById('score').textContent = score;
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            if (currentLevel >= 10) {
+                showCompletion();
+            } else {
+                renderProgressBar();
+                renderLevel(currentLevel);
+            }
+        }
+
+        function showCompletion() {
+            clearInterval(timerInterval);
+            document.getElementById('hud').style.display = 'none';
+            document.getElementById('gameContent').innerHTML = '';
+            const screen = document.getElementById('completionScreen');
+            screen.classList.add('active');
+            const bonus = Math.round(score * (difficultySettings[difficulty].multiplier - 1));
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('correctCount').textContent = correctAnswers;
+            document.getElementById('timeoutCount').textContent = timeouts;
+            document.getElementById('difficultyBonus').textContent = `${difficultySettings[difficulty].label} (×${difficultySettings[difficulty].multiplier})`;
+        }
+
+        function restartGame() {
+            document.getElementById('completionScreen').classList.remove('active');
+            showDifficultyScreen();
+        }
+
+        init();
+    </script>
+</body>
+</html>
